@@ -1,0 +1,132 @@
+# Skill元数据文件
+# 定义Skill的唯一标识、版本、能力、依赖和适配场景
+
+skill:
+  id: "ReqPlan-v3"
+  name: "ReqPlan-v3 软件开发引导专家"
+  version: "3.0.0"
+  author: "songzhou"
+  created_at: "2026-05-15"
+  updated_at: "2026-05-15"
+
+  # Skill分类与标签
+  category: "development"
+  tags:
+    - "reqplan"
+    - "development"
+    - "project-management"
+    - "bug-fix"
+    - "code-review"
+    - "architecture"
+    - "task-planning"
+
+  # 能力声明
+  capabilities:
+    - "引导用户清晰表达开发需求"
+    - "系统化设计技术方案"
+    - "制定可执行的开发计划"
+    - "跟踪任务进度与状态"
+    - "分层验证交付质量"
+    - "沉淀可追溯的开发链路记录"
+    - "Bug排查与修复流程"
+    - "代码审查与架构分析"
+
+  # 适配场景
+  scenarios:
+    - "开发新功能或模块"
+    - "修复Bug或解决问题"
+    - "代码审查与架构分析"
+    - "技术方案设计与选型"
+    - "项目计划与任务跟踪"
+
+  # 语义激活规则
+  activation_rules:
+    - type: "keyword"
+      keywords:
+        - "开发"
+        - "实现"
+        - "新增功能"
+        - "Bug"
+        - "错误"
+        - "异常"
+        - "审查"
+        - "分析"
+        - "评估"
+        - "技术方案"
+        - "架构规划"
+        - "帮我规划"
+        - "怎么做"
+        - "有什么方案"
+        - "下一步做什么"
+        - "修复"
+        - "排查"
+        - "代码审查"
+        - "设计方案"
+    - type: "intent"
+      patterns:
+        - "我要做个.*"
+        - "开发.*"
+        - "实现.*"
+        - "新增.*"
+        - "帮我看看.*"
+        - "审查.*"
+        - "分析.*"
+        - "检查.*"
+        - "出错了"
+        - "报错了"
+        - "不工作了"
+        - "修个Bug"
+        - "帮我规划.*"
+        - "怎么做.*"
+
+  # 依赖项
+  dependencies:
+    required: []
+    optional:
+      - "git-integration"
+
+  # 权限申请
+  permissions:
+    - "读取项目代码文件"
+    - "写入项目文件"
+    - "读取Git提交历史"
+    - "创建项目文档"
+
+  # 输出文件说明
+  output_files:
+    business_docs:
+      root: "docs/reqplan"
+      description: "业务文档，建议提交到Git仓库"
+      subdirs:
+        - "plans/"
+        - "harness/"
+        - "designs/"
+        - "requirements/"
+    internal_data:
+      root: ".trae/skills/ReqPlan-v3/9-data"
+      description: "Skill内部数据，建议加入.gitignore"
+      subdirs:
+        - "history/"
+        - "state/"
+        - "cache/"
+
+  # 兼容性
+  compatibility:
+    min_platform_version: "1.0.0"
+    supported_languages:
+      - "python"
+      - "javascript"
+      - "typescript"
+      - "java"
+      - "go"
+    supported_frameworks:
+      backend:
+        - "spring-boot"
+        - "express"
+        - "fastapi"
+        - "django"
+        - "flask"
+        - "nestjs"
+      frontend:
+        - "vue3"
+        - "react18"

@@ -1,160 +1,195 @@
-# ReqPlan v3.3 — 项目全生命周期管理引擎
+# ReqPlan-v3 (v4.0) — Harness Engineering + 接力棒持久化
 
-ReqPlan 是一个面向 TRAE Agent 的项目全生命周期管理引擎，基于 **Harness Engineering** 理念设计。它将项目开发从"靠提示词自由发挥"升级为"有规范、可验证、可追溯"的结构化流程。
-
----
-
-## 适用场景
-
-| 场景 | 说明 |
-|------|------|
-| 新项目启动 | 从零开始，需求→设计→开发→测试→文档全流程 |
-| 需求迭代 | 已有项目的功能增量开发和维护 |
-| 设计评审 | 架构设计、接口定义、数据库设计的评审 |
-| 代码审计 | 代码质量、安全性、性能的全面审查 |
-| 测试优化 | 测试策略制定、用例设计、覆盖提升 |
-| 文档完善 | 技术文档、API 文档、架构说明的补充 |
-| 架构重构 | 模块重构、性能优化、技术债务清理 |
+> 基于 Harness Engineering 理念 + 接力棒持久化机制的项目全生命周期管理引擎
 
 ---
 
-## 核心能力
+## 核心特色
 
-### Harness Engineering 五大支柱
+### 🎯 融合设计
 
-| 支柱 | 说明 | 对应文件 |
-|------|------|---------|
-| 信息落点 | 定义项目内信息的固定位置，Agent 和工程师沿同一套路径找依据 | `AGENTS.md`, `.agent/`, `docs/harness/` |
-| 计划协议 | 复杂任务必须有范围冻结（Scope / Non-Goals / Validation / Rollback） | [template-plan.md](5-templates/template-plan.md) |
-| 5 层验证 | Static → Unit → Integration → Failure → Writeback 分层验收 | [core-verification.md](3-core/core-verification.md) |
-| 结果回写 | 每次任务完成后将核心信息回写到标准位置 | [schema-writeback.md](4-schemas/schema-writeback.md) |
-| 可执行校验 | 将人工提醒的规则转化为自动检查脚本 | [scripts/harness/](scripts/harness/) |
+- **Harness Engineering**：多 Agent 协作（Analyzer → Designer → Implementer → Verifier）
+- **接力棒持久化**：跨 Session 续跑，状态持久化
+- **5 层验证体系**：Static → Unit → Integration → Failure → Compliance
+- **产物契约**：Agent 间通过文件传递，不靠记忆
 
-### 智能流程管理
+### 🔄 接力棒机制
 
-- **7 个预定义流程**：覆盖项目全生命周期各阶段
-- **超级流程编排**：通过 `flow-full` 串联 6 个子流程，支持多轮迭代
-- **双轨触发**：支持命令触发（`/reqplan flow <name>`）和自然语言触发
-- **上下文感知**：自动追踪会话状态，支持中断恢复和上下文收敛
+```bash
+{项目路径}/.agent/harness/_baton.md
+```
 
-### 状态与并发控制
+接力棒文件记录：
+- 当前状态
+- 进度追踪
+- 产物清单
+- 问题记录
+- 下一步行动
 
-- **状态锁机制**：防止多会话并发修改导致状态冲突
-- **上下文追踪**：TTL 管理、快照备份、跨会话恢复
-- **决策日志**：记录关键决策，支持回溯和约束提取
-
-### 产出物自动校验（v3.3 新增）
-
-每个核心 Action 执行完毕后，可运行对应脚本自动验证产出物完整性：
-
-| Action | 校验脚本 |
-|--------|---------|
-| 意图分析完成 | `validate-intent-analysis.ps1` |
-| 验证评估完成 | `validate-verification.ps1` |
-| 审核评估完成 | `verify-review-gate.ps1` |
-| 任务收口前 | `run-checks.ps1`（全量检查） |
+**核心价值**：任何时候都能续跑，不需要重新开始！
 
 ---
 
 ## 快速开始
 
-在 TRAE 对话中直接输入：
+### 1. 首次使用
 
-```
+```bash
+# 激活 Skill
 /reqplan start     # 启动引导，选择流程
-/reqplan init      # 初始化项目 Harness 目录结构
+/reqplan init      # 初始化项目 Harness 目录
 ```
 
-**三步上手**：
+### 2. 续跑（中断后继续）
 
-1. **初始化**：运行 `/reqplan init`，自动创建 `AGENTS.md`、`.agent/`、`docs/harness/` 等目录
-2. **填写入口**：在 `AGENTS.md` 中填入项目名称、技术栈、验证命令
-3. **开始任务**：输入 `/reqplan start` 选择流程，或直接用自然语言描述需求
+```bash
+# 自动读取接力棒，恢复进度
+/reqplan resume
+```
 
-渐进式落地手册请参考 [adoption-guide.md](6-docs/adoption-guide.md)。
+---
+
+## 7个核心流程
+
+| # | 流程 | 适用场景 |
+|---|------|----------|
+| 1 | 完整项目流程 | 新项目启动，从需求到验收 |
+| 2 | 需求迭代流程 | 已有项目的需求更新和迭代 |
+| 3 | 设计评审流程 | 架构设计、接口定义、数据库设计 |
+| 4 | 代码开发流程 | 代码实现、Bug 修复、功能开发 |
+| 5 | 测试优化流程 | 测试策略制定、用例设计、覆盖提升 |
+| 6 | 文档完善流程 | 技术文档、API 文档的补充 |
+| 7 | 架构重构流程 | 架构优化、技术债务清理 |
+
+---
+
+## 多 Agent 协作
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                     REQPLAN HARNESS                          │
+│                                                              │
+│  ┌─────────────┐                                             │
+│  │  总控(我)    │ ← 状态机 + 调度 + 判断                      │
+│  └──────┬──────┘                                             │
+│         │ 调度                                               │
+│    ┌────┴────┬────────────┬─────────────┐                   │
+│    ▼         ▼            ▼             ▼                    │
+│ ┌──────┐ ┌──────┐    ┌──────┐     ┌──────┐                  │
+│ │分析Agent│ │设计Agent│  │实现Agent│   │验证Agent│                  │
+│ │ explorer│ │ worker │    │ worker │    │ worker │                  │
+│ └──────┘ └──────┘    └──────┘     └──────┘                  │
+│     ↓         ↓           ↓             ↓                    │
+│ _analysis _design   源码变更   _verification               │
+│    .md       .md       文件        .md                         │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 状态机
+
+```
+START → ANALYZE → CONFIRM → DESIGN → IMPLEMENT → VERIFY → JUDGE
+                                      ↓
+                  ┌────────────────────┼────────────────────┐
+                  ↓                    ↓                    ↓
+               ✅ DONE              🔧 DESIGN             🔄 IMPLEMENT
+                                    (修复模式)           (重试模式)
+```
+
+---
+
+## 产物结构
+
+```
+{项目路径}/
+└── .agent/
+    └── harness/
+        ├── _baton.md          # 接力棒
+        ├── _analysis.md       # 分析产物
+        ├── _design.md         # 设计产物
+        ├── _implementation.md # 实现摘要
+        └── _verification.md   # 验证产物
+```
+
+---
+
+## 5 层验证体系
+
+| 层级 | 验证内容 | 工具 |
+|------|----------|------|
+| Layer 1 | 静态检查 | pylint, ruff, mypy |
+| Layer 2 | 单元测试 | pytest |
+| Layer 3 | 构建集成 | python -m py_compile |
+| Layer 4 | 异常处理 | 边界测试 |
+| Layer 5 | 流程合规 | 产物完整性 |
 
 ---
 
 ## 目录结构
 
 ```
-ReqPlan-v3/
-├── SKILL.md                  # 技能入口（TRAE 加载点）
-├── README.md                 # 本文件
-├── 3-core/                   # 16 个核心模块
-│   ├── core-actions.md       # Action 接口规范（14 个 Action）
-│   ├── core-error-handling.md# 错误码体系（E001-E999）
-│   ├── core-task-pipeline.md # 5 阶段任务管道
-│   ├── core-harness-selector.md # S/L/M/H 级别选择器
-│   └── ...                   # 上下文追踪、意图分析、验证等
-├── 4-schemas/                # 7 个 Schema 定义
-├── 5-templates/              # 5 个文档模板
-│   ├── template-req.md       # 需求文档模板
-│   ├── template-design.md    # 设计文档模板
-│   ├── template-plan.md      # 计划协议模板
-│   ├── template-agents.md    # AGENTS.md 模板
-│   └── template-control-plane.md # 控制面文档模板
-├── 6-docs/                   # 辅助文档
-│   ├── adoption-guide.md     # 渐进式落地指南
-│   ├── quick-reference.md    # 命令速查
-│   ├── changelog.md          # 变更日志
-│   └── troubleshooting.md    # 故障排查
-├── 7-flows/                  # 7 个流程定义
-│   ├── flow-full.md          # 超级流程编排器
-│   └── flow-*.md             # 6 个子流程
-└── scripts/harness/          # 可执行校验脚本
-    ├── run-checks.ps1        # 全量检查编排器
-    ├── check-structure.ps1   # 目录结构检查
-    ├── check-plan.ps1        # 计划文件检查
-    ├── validate-*.ps1        # 产出物校验脚本
-    └── verify-review-gate.ps1# 评审门禁检查
+ReqPlan-v3-v4/
+├── SKILL.md                  # 技能入口
+├── SKILL-execution.md        # 核心执行指南
+├── README.md                # 本文件
+├── agents/                  # Agent 定义
+│   ├── analyzer-agent.md    # 分析 Agent
+│   ├── designer-agent.md    # 设计 Agent
+│   ├── implementer-agent.md # 实现 Agent
+│   └── verifier-agent.md    # 验证 Agent
+├── protocols/               # 协议文档
+│   └── baton-protocol.md   # 接力棒协议
+└── artifacts/               # 产物模板
+    └── template-artifacts.md # 产物模板
 ```
-
----
-
-## 命令速览
-
-```
-/reqplan start              # 启动引导
-/reqplan init               # 初始化 Harness 目录
-/reqplan flow <name>        # 切换流程
-/reqplan plan               # 制定计划（含范围冻结）
-/reqplan verify             # 执行分层验证
-/reqplan status             # 查看全局状态
-/reqplan guide              # 智能引导下一步
-/reqplan sync               # 文件同步
-/reqplan context decisions  # 查看决策日志
-/reqplan lock acquire       # 获取状态锁
-```
-
-完整命令列表请参考 [quick-reference.md](6-docs/quick-reference.md)。
 
 ---
 
 ## 设计理念
 
-ReqPlan 遵循 **Harness Engineering** 理念：
+### Harness Engineering
 
-1. **信息落点** — 每类信息有且只有一个标准位置，Agent 和人都能找到
-2. **计划协议** — 复杂任务启动前先约定范围（Scope）、不做清单（Non-Goals）、验收标准（Validation）、回滚策略（Rollback）
-3. **5 层验证** — 不在最后一刻才验证，每个阶段做对应层次的检查
-4. **可执行检查** — 不依赖"记住规则"，把规则写成可重复运行的脚本
-5. **结果回写** — 每次闭环都把产出物放到标准位置，下次可复用
+1. **角色边界** — 每个 Agent 只做一件事
+2. **状态机** — 定义流程走向，防止跳步
+3. **产物契约** — Agent 间用文件传递，不靠记忆
+4. **护栏规则** — 明确禁止清单，防止越权
 
----
+### 接力棒持久化
 
-## 版本历史
-
-| 版本 | 亮点 |
-|------|------|
-| v3.3 | 产出物校验脚本、重复错误检测、前端三段式路径（**当前版本**） |
-| v3.2 | Action 接口规范、Harness 级别选择器、超级流程编排、上下文追踪、状态锁 |
-| v3.1 | 信息落点体系、智能引导 2.0 |
-| v3.0 | 初始版本，7 个核心流程 + 双轨触发 |
+1. **跨 Session 续跑** — 任何时候都能继续之前的工作
+2. **状态可视化** — 一目了然当前进度
+3. **问题记录** — 遇到的问题不会丢失
+4. **上下文恢复** — 自动恢复完整上下文
 
 ---
 
-**版本**: v3.3  
-**作者**: songzhou  
-**更新日期**: 2026-05-14  
-**基于**: Harness Engineering 理念 + TRAE Skill 编写规范
+## 版本信息
+
+**版本**: v4.0 (融合版)
+**更新日期**: 2026-05-19
+
+**融合内容**：
+- ReqPlan-v3 原始仓库 (v3.3) 的 7 个核心流程
+- Harness Engineering 多 Agent 协作
+- 接力棒持久化机制
+- 5 层验证体系
+
+**基于**：
+- ReqPlan-v3 原始仓库
+- testerhome Harness 设计模式
+- OpenAI Harness Engineering 文章
+
+---
+
+## 参考资料
+
+- [ReqPlan-v3 GitHub](https://github.com/songzhou666/ReqPlan-v3)
+- [Harness Engineering 文章](https://mp.weixin.qq.com/s/AFX_qsyAPBRYyqEV365O9Q)
+- [testerhome Harness 设计](https://testerhome.com/articles/44066)
+
+---
+
+**作者**: songzhou
+**维护**: 持续更新中
