@@ -589,7 +589,7 @@ stage_5_failure:
 component_mapping:
   landing_zone: ["pr_mr", "test_verification (docs/test/)", "控制面文档"]
   action: ["/reqplan docs generate", "/reqplan task update"]
-  core: ["schema-writeback.md (回写规范)", "core-context-tracker.md (decision_log)"]
+  core: ["schema-writeback.md (回写规范)"]
   state: ["writeback_result 写入 state.yaml"]
 ```
 
@@ -769,9 +769,7 @@ core-task-pipeline.md (本文件)
     ├── 流程编排 ← flow-full.md + 子 flow (走什么流程)
     ├── 验证验收 ← core-verification.md (怎么检查)
     ├── 结果回写 ← schema-writeback.md (怎么记录)
-    ├── 状态管理 ← core-state-management.md (怎么保持状态)
-    ├── 上下文管理 ← core-context-tracker.md (怎么跟踪上下文)
-    └── 状态锁 ← schema-state-lock.md (怎么防冲突)
+    └── 状态管理 ← core-state-management.md (怎么保持状态)
 ```
 
 ### 按阶段映射
@@ -788,5 +786,5 @@ core-task-pipeline.md (本文件)
 
 ## 版本信息
 **版本**: 1.0.0
-**更新时间**: 2026-05-14
-**引用**: 3-core/core-actions.md, 3-core/core-verification.md, 3-core/core-state-management.md, 3-core/core-context-tracker.md, 4-schemas/schema-landing-zone.md, 4-schemas/schema-writeback.md, 4-schemas/schema-state-lock.md, 7-flows/flow-full.md, 6-docs/adoption-guide.md
+**更新时间**: 2026-05-20
+**引用**: 3-core/core-actions.md, 3-core/core-verification.md, 3-core/core-state-management.md, 4-schemas/schema-landing-zone.md, 4-schemas/schema-writeback.md, 7-flows/flow-full.md, 6-docs/adoption-guide.md

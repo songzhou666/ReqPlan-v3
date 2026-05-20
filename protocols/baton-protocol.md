@@ -47,9 +47,10 @@
 | 项目 | {项目名称} |
 | 开始时间 | {ISO 8601} |
 | 最后更新 | {ISO 8601} |
-| 当前状态 | {START/ANALYZE/CONFIRM/DESIGN/IMPLEMENT/VERIFY/JUDGE} |
+| 当前状态 | {START/ANALYZE/CONFIRM/DESIGN/IMPLEMENT/VERIFY/JUDGE/DONE/ABORT/FAILED} |
 | 模式 | {NORMAL/DESIGN_FIX/REVIEW_FIX/RETRY_FIX} |
 | 重试计数 | {0/1/2} |
+| design_fix_retry | {0/1/2} |
 
 ## 进度追踪
 
@@ -69,6 +70,22 @@
 - [ ] `.agent/harness/_design.md` - 设计文档
 - [ ] `.agent/harness/_implementation.md` - 实现摘要
 - [ ] `.agent/harness/_verification.md` - 验证报告
+
+### ⭐ 任务追踪（统一管理）
+
+> **重要**：所有任务状态统一在 baton.md 中管理，不再使用独立的 tasks.md 文件。
+
+| # | 任务名称 | 状态 | 完成时间 | 备注 |
+|---|---------|------|---------|------|
+| 1 | {任务1} | ✅ 完成 | {时间} | {备注} |
+| 2 | {任务2} | 🔄 进行中 | - | {备注} |
+| 3 | {任务3} | ⏳ 待开始 | - | {备注} |
+
+**任务状态说明**：
+- ✅ 完成：任务已完成
+- 🔄 进行中：任务正在执行
+- ⏳ 待开始：任务还未开始
+- ❌ 失败：任务执行失败
 
 ## 当前阶段详情
 
@@ -105,16 +122,17 @@
 
 ### 4.1 更新时机
 
-⚠️ **必须更新的 6 个时机**：
+⚠️ **必须更新的时机**：
 
-| # | 时机 | 必须执行 |
-|---|------|----------|
-| 1 | 阶段开始时 | 更新状态为"进行中" |
-| 2 | 阶段完成时 | 标记阶段为完成 |
-| 3 | 用户交互后 | 记录用户反馈 |
-| 4 | 产物生成后 | 更新产物清单 |
-| 5 | 遇到问题时 | 记录到问题记录 |
-| 6 | **每次工具调用结束前** | 确保状态已保存 |
+| # | 时机 | 必须执行 | 优先级 |
+|---|------|----------|--------|
+| 1 | 阶段开始时 | 更新状态为"进行中" | 高 |
+| 2 | 阶段完成时 | 标记阶段为完成 | 高 |
+| 3 | 用户交互后 | 记录用户反馈 | 高 |
+| 4 | 产物生成后 | 更新产物清单 | 高 |
+| 5 | 遇到问题时 | 记录到问题记录 | 高 |
+
+> **注意**：不需要在每次工具调用后更新，只需在上述关键时机更新。阶段内多次工具调用可在阶段完成时统一更新。
 
 ---
 
@@ -158,11 +176,18 @@ read {项目路径}/.agent/harness/_baton.md
 
 ```
 START → ANALYZE → CONFIRM → DESIGN → IMPLEMENT → VERIFY → JUDGE
-                                      ↓
-                  ┌────────────────────┼────────────────────┐
-                  ↓                    ↓                    ↓
-               ✅ DONE              🔧 DESIGN             🔄 IMPLEMENT
-                                    (修复模式)           (重试模式)
+              ↑        │                      ↓
+              └────────┘      ┌─────────────────┼─────────────────┐
+              (修改)          ↓                 ↓                 ↓
+                           ✅ DONE           🔧 DESIGN          🔄 IMPLEMENT
+                                           (修复模式)          (重试模式)
+
+CONFIRM 分支:
+- ✅ 确认 → DESIGN
+- ✏️  修改 → ANALYZE
+- ❌ 取消 → ABORT
+
+终止状态: DONE, ABORT, FAILED
 ```
 
 ### 7.1 续跑映射
@@ -191,10 +216,19 @@ write {项目路径}/.agent/harness/_baton.md
 
 # 检查产物
 ls -la {项目路径}/.agent/harness/
+
+# 校验接力棒格式（强制检查点）
+. {Skill路径}/scripts/harness/validate-baton.ps1 -ProjectPath {项目路径}
+
+# 校验产物格式（强制检查点）
+. {Skill路径}/scripts/harness/validate-artifact.ps1 -ProjectPath {项目路径} -Artifact <analysis|design|implementation|verification>
+
+# 阶段转换综合检查（强制检查点）
+. {Skill路径}/scripts/harness/run-checks.ps1 -ProjectPath {项目路径} -Stage <阶段名>
 ```
 
 ---
 
 *本文档是 ReqPlan-v3 Harness 系统的核心协议*
-*版本: 4.0*
-*更新: 2026-05-19*
+*版本: 4.1*
+*更新: 2026-05-20*

@@ -335,7 +335,7 @@ E803:
   title: "流程上下文异常"
   message: "流程上下文状态不正确或丢失"
   recovery:
-    - "使用 /reqplan context 查看上下文详情"
+    - "使用 /reqplan status 查看当前状态"
     - "使用 /reqplan flow current 确认当前流程"
     - "访问 flow_history 检查流程记录"
 

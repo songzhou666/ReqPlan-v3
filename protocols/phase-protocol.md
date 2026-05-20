@@ -36,11 +36,14 @@
 
 ```markdown
 阶段进入前必须确认：
-- [ ] 接力棒文件存在
+- [ ] 接力棒文件存在（调用 scripts/validate-baton.ps1 校验）
 - [ ] 前置阶段已完成
-- [ ] 所需产物已生成
+- [ ] 所需产物已生成（调用 scripts/validate-artifact.ps1 校验）
 - [ ] 用户意图明确
+- [ ] 阶段转换合法（调用 scripts/run-checks.ps1 校验）
 ```
+
+> **强制检查点**：每个阶段转换前，必须调用 `scripts/run-checks.ps1 -ProjectPath <路径> -Stage <阶段名>` 进行校验。未通过则阻断流程。
 
 ---
 
@@ -182,13 +185,17 @@ read e:/Mytest_skill/.trae/skills/ReqPlan-v3/agents/analyzer-agent.md
 # 4. 写入产物
 write E:/web_tools/.agent/harness/_analysis.md
 
-# 5. 验证产物
-ls -la E:/web_tools/.agent/harness/_analysis.md
+# 5. 验证产物（强制检查点）
+# 调用校验脚本验证产物格式
+. e:/Mytest_skill/.trae/skills/ReqPlan-v3/scripts/harness/validate-artifact.ps1 -ProjectPath E:/web_tools -Artifact analysis
 
 # 6. 更新接力棒
 read E:/web_tools/.agent/harness/_baton.md
 # 修改状态为 ANALYZE ✅
 write E:/web_tools/.agent/harness/_baton.md
+
+# 7. 阶段转换检查（强制检查点）
+. e:/Mytest_skill/.trae/skills/ReqPlan-v3/scripts/harness/run-checks.ps1 -ProjectPath E:/web_tools -Stage CONFIRM
 ```
 
 ### 2.6 退出标准
@@ -399,6 +406,8 @@ CONFIRM 用户确认后进入，或 JUDGE 判断需要 DESIGN_FIX 时返回。
 - [ ] ## 任务列表
   - [ ] 任务表格（任务名、涉及文件、验证方式、依赖）
   - [ ] 优先级排序
+  - [ ] ⚠️ **重要**：任务状态统一在 baton.md 的"任务追踪"章节中管理
+
 - [ ] ## 验证方案
   - [ ] Layer 1: 静态检查
   - [ ] Layer 2: 单元测试
@@ -783,12 +792,18 @@ VERIFY 完成后进入。
   [ ] → 流程结束
 
 如果 ARCHITECTURE_VIOLATION 🔧:
-  [ ] → DESIGN(修复模式)
-  [ ] 更新接力棒:
-      - 状态: DESIGN
-      - 模式: DESIGN_FIX
-      - 产物: _design.md (需重新生成)
-  [ ] → 继续 DESIGN 阶段
+  [ ] 检查 design_fix_retry 计数
+  [ ] 如果 design_fix_retry < 2:
+      - 更新接力棒:
+        - 状态: DESIGN
+        - 模式: DESIGN_FIX
+        - design_fix_retry += 1
+        - 产物: _design.md (需重新生成)
+      - → 继续 DESIGN 阶段
+  [ ] 如果 design_fix_retry >= 2 ❌:
+      - 更新接力棒: 状态 FAILED ❌
+      - 输出失败报告: 架构问题反复出现，需要人工介入
+      - 流程结束
 
 如果 REVIEW_VIOLATION 🔧:
   [ ] → IMPLEMENT(修复模式)
@@ -806,21 +821,30 @@ VERIFY 完成后进入。
       - retry += 1 (计入重试)
   [ ] → 继续 IMPLEMENT 阶段
 
-如果 retry >= 2 ❌:
+如果 RUNTIME_FAILURE 🔄 且 retry >= 2 ❌:
   [ ] → FAILED
   [ ] 更新接力棒: 状态 FAILED ❌
   [ ] 输出失败报告
   [ ] 流程结束
+
+如果 ENVIRONMENT ⚠️:
+  [ ] → 报告用户
+  [ ] 更新接力棒:
+      - 状态: JUDGE
+      - 记录: 环境问题详情
+      - 下一步: 等待用户处理
+  [ ] 输出环境问题的通知和建议
+  [ ] 等待用户处理环境后手动继续
 ```
 
 ### 8.4 错误分类说明
 
 | 错误类型 | 策略 | 计入重试 | 说明 |
 |----------|------|-----------|------|
-| **ARCHITECTURE_VIOLATION** | DESIGN(修复) | ❌ 否 | 架构/分层问题，修复后不会反复 |
+| **ARCHITECTURE_VIOLATION** | DESIGN(修复) | ✅ 是 (design_fix_retry) | 架构/分层问题，最多修复2次 |
 | **REVIEW_VIOLATION** | IMPLEMENT(修复) | ❌ 否 | 代码规范问题，修复后不会反复 |
 | **RUNTIME_FAILURE** | IMPLEMENT(重试) | ✅ 是 | 测试失败，可能环境问题 |
-| **ENVIRONMENT** | 报告用户 | ❌ 否 | 环境问题，需人工介入 |
+| **ENVIRONMENT** | 报告用户，等待处理 | ❌ 否 | 环境问题，需人工介入 |
 
 ### 8.5 退出标准
 
@@ -994,5 +1018,5 @@ write {项目路径}/.agent/harness/_baton.md
 ---
 
 *本文档是 ReqPlan-v3 Harness 系统的执行规范*
-*版本: 1.0*
-*更新: 2026-05-19*
+*版本: 4.1*
+*更新: 2026-05-20*

@@ -357,95 +357,7 @@ sync:
     - "notify_user"
 ```
 
-#### 10. history — 历史查看
-```yaml
-history:
-  name: "流程历史"
-  version: "1.0.0"
-  description: "查看流程执行历史、决策日志"
-  
-  triggers:
-    - type: command
-      pattern: "/reqplan history [--detail] [--flow <flow_name>]"
-    - type: nlp
-      keywords: ["历史", "之前", "记录", "回顾"]
-  
-  interface:
-    input:
-      $ref: "#/definitions/HistoryInput"
-    output:
-      $ref: "#/definitions/HistoryOutput"
-  
-  constraints:
-    requires_lock: false
-    requires_flow: null
-    idempotent: true
-    max_duration: 10
-    harness_levels: ["L", "M", "H"]
-
-  post_actions:
-    - "notify_user"
-```
-
-#### 11. context — 上下文管理
-```yaml
-context:
-  name: "上下文管理"
-  version: "1.0.0"
-  description: "管理上下文：查看/收敛/快照/恢复"
-  
-  triggers:
-    - type: command
-      pattern: "/reqplan context status | decisions | compact | snapshot | restore <id>"
-  
-  interface:
-    input:
-      $ref: "#/definitions/ContextInput"
-    output:
-      $ref: "#/definitions/ContextOutput"
-  
-  constraints:
-    requires_lock: true          # 写操作（compact/snapshot）需要锁
-    requires_flow: null
-    idempotent: false
-    max_duration: 30
-    harness_levels: ["L", "M", "H"]
-
-  post_actions:
-    - "update_state"            # compact 和 snapshot 时
-    - "notify_user"
-```
-
-#### 12. lock — 状态锁管理
-```yaml
-lock:
-  name: "状态锁管理"
-  version: "1.0.0"
-  description: "管理状态锁：获取/释放/查看/强制获取"
-  
-  triggers:
-    - type: command
-      pattern: "/reqplan lock acquire | release | status | acquire --force"
-  
-  interface:
-    input:
-      $ref: "#/definitions/LockInput"
-    output:
-      $ref: "#/definitions/LockOutput"
-  
-  constraints:
-    requires_lock: false         # 锁管理操作自身不需要锁
-    requires_flow: null
-    idempotent: false
-    max_duration: 10
-    harness_levels: ["L", "M", "H"]
-
-  post_actions:
-    - "update_state"            # 状态变更时
-    - "notify_user"
-```
-
-#### 13. verify — 验证验收
+#### 10. verify — 验证验收
 ```yaml
 verify:
   name: "验证验收"
@@ -695,67 +607,7 @@ definitions:
             enum: ["healthy", "warning", "expired"]
       message: { type: string }
 
-  # ====== lock ======
-  LockInput:
-    type: object
-    properties:
-      action:
-        type: string
-        required: true
-        enum: ["acquire", "release", "status", "force_acquire"]
-      description:
-        type: string
-        required: false
-        description: "操作说明（acquire 时可选）"
-
-  LockOutput:
-    type: object
-    properties:
-      success: { type: boolean }
-      data:
-        type: object
-        properties:
-          status: { type: string, enum: ["locked", "unlocked", "stale"] }
-          holder: { type: string }
-          acquiredAt: { type: string, format: "date-time" }
-          expiresAt: { type: string, format: "date-time" }
-          lockVersion: { type: number }
-      message: { type: string }
-      error:
-        type: string
-        required: false
-        enum: ["E801", "E802"]
-
-  # ====== context ======
-  ContextInput:
-    type: object
-    properties:
-      action:
-        type: string
-        required: true
-        enum: ["status", "decisions", "compact", "snapshot", "restore", "history", "archive_list"]
-      snapshotId:
-        type: string
-        required: false
-        description: "restore 时需要指定快照ID"
-
-  ContextOutput:
-    type: object
-    properties:
-      success: { type: boolean }
-      data:
-        type: object
-        properties:
-          contextId: { type: string }
-          status: { type: string, enum: ["active", "low_activity", "expired", "compacted"] }
-          lastActivity: { type: string, format: "date-time" }
-          tokenEstimate: { type: number }
-          decisionCount: { type: number }
-          snapshotCount: { type: number }
-          compactionHistory: { type: array, items: { type: object } }
-      message: { type: string }
-
-  # ====== task ======
+  # ====== verify ======
   TaskInput:
     type: object
     properties:
@@ -801,30 +653,6 @@ definitions:
           detectedChanges: { type: array }
           impactAnalysis: { type: object }
           syncPlan: { type: array }
-      message: { type: string }
-
-  # ====== history ======
-  HistoryInput:
-    type: object
-    properties:
-      detail:
-        type: boolean
-        required: false
-        default: false
-      flowName:
-        type: string
-        required: false
-
-  HistoryOutput:
-    type: object
-    properties:
-      success: { type: boolean }
-      data:
-        type: object
-        properties:
-          flowHistory: { type: array }
-          decisionLog: { type: array }
-          snapshotList: { type: array }
       message: { type: string }
 
   # ====== verify ======
@@ -1010,10 +838,9 @@ phase_3:
 /reqplan start --flow full           # 启动完整项目流程
 /reqplan task update TASK-001 --status DONE  # 更新任务状态
 /reqplan sync --dry-run              # 预览同步变更
-/reqplan lock acquire --description "更新需求文档"  # 获取锁
 ```
 
 ## 版本信息
 **版本**: 1.0.0
-**更新时间**: 2026-05-14
-**引用**: 3-core/core-state-management.md, 3-core/core-context-tracker.md, 4-schemas/schema-state-lock.md, 4-schemas/schema-state.md
+**更新时间**: 2026-05-20
+**引用**: 3-core/core-state-management.md, 4-schemas/schema-state.md

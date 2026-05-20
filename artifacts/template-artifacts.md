@@ -112,8 +112,23 @@
 
 ---
 
+## ⚠️ 产物完成后的强制操作（Analyzer Agent 必须执行）
+
+```markdown
+## 完成后检查清单
+
+- [ ] 1. 本产物已保存到 {项目路径}/.agent/harness/_analysis.md
+- [ ] 2. 已调用 scripts/harness/validate-artifact.ps1 -Artifact analysis 并通过
+- [ ] 3. 已更新接力棒：状态 ANALYZE ✅，下一步 CONFIRM
+- [ ] 4. 已确认产物包含所有必需章节（基本信息、需求理解、技术栈、涉及文件、约束条件）
+
+**阻断规则**：以上任一未勾选 → 不能进入 CONFIRM 阶段
+```
+
+---
+
 *本文档由 Analyzer Agent 自动生成*
-*版本: 1.0*
+*版本: 4.1*
 *时间: {ISO 8601}*
 ```
 
@@ -203,25 +218,73 @@
 ### 6.1 Layer 1: 静态检查
 - 工具: pylint / ruff / mypy
 - 命令: `ruff check .`
+- 验收标准:
+  - 无致命错误（Error）
+  - 警告（Warning）数量 ≤ 5
+  - 代码风格符合 PEP 8
 
 ### 6.2 Layer 2: 单元测试
 - 框架: pytest
 - 命令: `pytest tests/ -v`
+- 验收标准:
+  - 所有测试通过
+  - 覆盖率 ≥ 80%（P0 功能）
 
 ### 6.3 Layer 3: 构建集成
 - 命令: `python -m py_compile app.py`
+- 复杂项目额外检查:
+  - `pip install -r requirements.txt`
+  - `python setup.py check`（如有 setup.py）
+  - `pip install -e .`（如有 pyproject.toml）
+- 验收标准:
+  - 编译无错误
+  - 依赖安装成功
 
 ### 6.4 Layer 4: 异常处理
-- 测试场景: 401 / 403 / 404
+- Web 项目测试场景:
+  - 401 未授权 → {"error": "Unauthorized"}
+  - 403 禁止访问 → {"error": "Forbidden"}
+  - 404 资源不存在 → {"error": "Not Found"}
+  - 400 参数错误 → {"error": "Bad Request"}
+- 通用项目测试场景:
+  - 空输入/空值处理
+  - 类型错误处理
+  - 边界条件处理
+  - 资源不存在处理
+- 验收标准:
+  - 所有异常场景正确处理
+  - 错误信息清晰
 
 ### 6.5 Layer 5: 流程合规
-- 产物完整性检查
-- 文档更新检查
+- 产物完整性检查:
+  - _analysis.md 存在且完整
+  - _design.md 存在且完整
+  - _implementation.md 存在且完整
+- 文档更新检查:
+  - README 更新
+  - API 文档更新
+  - 代码注释完整
+
+---
+
+## ⚠️ 产物完成后的强制操作（Designer Agent 必须执行）
+
+```markdown
+## 完成后检查清单
+
+- [ ] 1. 本产物已保存到 {项目路径}/.agent/harness/_design.md
+- [ ] 2. 已调用 scripts/harness/validate-artifact.ps1 -Artifact design 并通过
+- [ ] 3. 已更新接力棒：状态 DESIGN ✅，下一步 IMPLEMENT
+- [ ] 4. 已确认任务列表包含"涉及文件"和"验证方式"列
+- [ ] 5. 已确认验证方案包含 Layer 1-5
+
+**阻断规则**：以上任一未勾选 → 不能进入 IMPLEMENT 阶段
+```
 
 ---
 
 *本文档由 Designer Agent 自动生成*
-*版本: 1.0*
+*版本: 4.1*
 *时间: {ISO 8601}*
 ```
 
@@ -235,7 +298,7 @@
 ## 基本信息
 - 实现时间: {ISO 8601}
 - 实现者: Implementer Agent
-- 模式: {NORMAL/ARCH_FIX/REVIEW_FIX/RETRY_FIX}
+- 模式: {NORMAL/REVIEW_FIX/RETRY_FIX}
 
 ---
 
@@ -276,8 +339,24 @@
 
 ---
 
+## ⚠️ 产物完成后的强制操作（Implementer Agent 必须执行）
+
+```markdown
+## 完成后检查清单
+
+- [ ] 1. 本产物已保存到 {项目路径}/.agent/harness/_implementation.md
+- [ ] 2. 已调用 scripts/harness/validate-artifact.ps1 -Artifact implementation 并通过
+- [ ] 3. 已更新接力棒：状态 IMPLEMENT ✅，下一步 VERIFY
+- [ ] 4. 已确认所有代码已保存到文件系统（不是只在对话中）
+- [ ] 5. 已确认所有设计中的任务都已完成（或明确标记为未完成）
+
+**阻断规则**：以上任一未勾选 → 不能进入 VERIFY 阶段
+```
+
+---
+
 *本文档由 Implementer Agent 自动生成*
-*版本: 1.0*
+*版本: 4.1*
 *时间: {ISO 8601}*
 ```
 
@@ -302,6 +381,7 @@
 |------|------|------|
 | pylint | `pylint app.py` | ✅ 通过 / ❌ 失败 |
 | ruff | `ruff check .` | ✅ 通过 / ❌ 失败 |
+| mypy | `mypy app.py` | ✅ 通过 / ❌ 失败 |
 
 ### 1.2 违规列表
 | # | 问题 | 文件 | 行号 | 类型 |
@@ -319,6 +399,11 @@
 - 失败数: {数量}
 - 覆盖率: {百分比}
 
+### 2.2 失败的测试
+| # | 测试 | 错误 |
+|---|------|------|
+| 1 | {测试名} | {错误信息} |
+
 ---
 
 ## Layer 3: 构建集成
@@ -327,6 +412,46 @@
 | 命令 | 结果 |
 |------|------|
 | `python -m py_compile` | ✅ 通过 / ❌ 失败 |
+| `pip install -r requirements.txt` | ✅ 通过 / ❌ 失败 |
+
+### 3.2 失败详情
+```
+{错误信息}
+```
+
+---
+
+## Layer 4: 异常处理
+
+### 4.1 测试场景
+| # | 场景 | 预期 | 实际 | 状态 |
+|---|------|------|------|------|
+| 1 | 401 未授权 | 401 | 401 | ✅ |
+| 2 | 403 禁止访问 | 403 | 403 | ✅ |
+| 3 | 404 资源不存在 | 404 | 404 | ✅ |
+| 4 | 400 参数错误 | 400 | 400 | ✅ |
+
+### 4.2 失败场景
+| # | 场景 | 预期 | 实际 | 问题 |
+|---|------|------|------|------|
+| 1 | {场景} | {预期} | {实际} | {问题} |
+
+---
+
+## Layer 5: 流程合规
+
+### 5.1 产物检查
+| # | 产物 | 存在 | 完整 |
+|---|------|------|------|
+| 1 | _analysis.md | ✅ | ✅ |
+| 2 | _design.md | ✅ | ✅ |
+| 3 | _implementation.md | ✅ | ✅ |
+
+### 5.2 文档检查
+| # | 检查项 | 状态 |
+|---|--------|------|
+| 1 | README 更新 | ✅ |
+| 2 | API 文档更新 | ✅ |
 
 ---
 
@@ -336,16 +461,40 @@
 **状态**: ✅ PASS / ❌ FAIL
 
 ### 错误分类
-| # | 错误类型 | 数量 |
-|---|----------|------|
-| 1 | ARCHITECTURE_VIOLATION | 0 |
-| 2 | REVIEW_VIOLATION | 0 |
-| 3 | RUNTIME_FAILURE | 0 |
+| # | 错误类型 | 数量 | 详情 |
+|---|----------|------|------|
+| 1 | ARCHITECTURE_VIOLATION | 0 | 架构/分层违规 |
+| 2 | REVIEW_VIOLATION | 0 | 代码规范问题 |
+| 3 | RUNTIME_FAILURE | 0 | 测试/运行失败 |
+| 4 | ENVIRONMENT | 0 | 环境问题 |
+
+### 下一步
+- PASS → JUDGE → DONE ✅
+- ARCHITECTURE → JUDGE → DESIGN(修复)
+- REVIEW → JUDGE → IMPLEMENT(修复)
+- RUNTIME & retry < 2 → JUDGE → IMPLEMENT(重试)
+- retry >= 2 → JUDGE → FAILED ❌
+
+---
+
+## ⚠️ 产物完成后的强制操作（Verifier Agent 必须执行）
+
+```markdown
+## 完成后检查清单
+
+- [ ] 1. 本产物已保存到 {项目路径}/.agent/harness/_verification.md
+- [ ] 2. 已调用 scripts/harness/validate-artifact.ps1 -Artifact verification 并通过
+- [ ] 3. 已更新接力棒：状态 VERIFY ✅，下一步 JUDGE
+- [ ] 4. 已确认综合判定为明确的 PASS 或 FAIL
+- [ ] 5. 如果 FAIL，已确认错误分类（ARCHITECTURE/REVIEW/RUNTIME/ENVIRONMENT）
+
+**阻断规则**：以上任一未勾选 → 不能进入 JUDGE 阶段
+```
 
 ---
 
 *本文档由 Verifier Agent 自动生成*
-*版本: 1.0*
+*版本: 4.1*
 *时间: {ISO 8601}*
 ```
 
@@ -363,9 +512,10 @@
 | 项目 | {项目名称} |
 | 开始时间 | {ISO 8601} |
 | 最后更新 | {ISO 8601} |
-| 当前状态 | {START/ANALYZE/CONFIRM/DESIGN/IMPLEMENT/VERIFY/JUDGE} |
+| 当前状态 | {START/ANALYZE/CONFIRM/DESIGN/IMPLEMENT/VERIFY/JUDGE/DONE/ABORT/FAILED} |
 | 模式 | {NORMAL/DESIGN_FIX/REVIEW_FIX/RETRY_FIX} |
 | 重试计数 | {0/1/2} |
+| design_fix_retry | {0/1/2} |
 
 ## 进度追踪
 
@@ -400,5 +550,5 @@
 ---
 
 *本文档是 ReqPlan-v3 Harness 系统的产物模板集合*
-*版本: 4.0*
-*更新: 2026-05-19*
+*版本: 4.1*
+*更新: 2026-05-20*

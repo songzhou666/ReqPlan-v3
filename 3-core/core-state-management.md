@@ -5,6 +5,11 @@
 
 状态管理模块负责管理ReqPlan的全局状态，包括项目状态、任务状态、进度追踪和上下文保持。
 
+**核心原则**：
+- `_baton.md`（接力棒）是跨Session持久化的**唯一真相来源**
+- 使用统一的**7阶段Harness状态机**：START → ANALYZE → CONFIRM → DESIGN → IMPLEMENT → VERIFY → JUDGE
+- 支持重试机制和回退修复流程
+
 ## Input
 
 ```yaml
@@ -17,7 +22,7 @@
 ### action类型说明
 
 | action | 说明 | 参数要求 |
-|------|------|----------|
+|--------|------|----------|
 | get | 获取状态 | projectId |
 | set | 设置状态（覆盖） | projectId, data |
 | update | 更新状态（合并） | projectId, data |
@@ -38,155 +43,165 @@
 
 ### 目录结构
 ```
-.trae/reqplan/projects/<projectId>/
-├── config.yaml             # 项目配置
-├── state.yaml              # 当前状态
-├── state.backup.yaml       # 状态备份
-└── requirements/
-    └── <req-id>/
-        ├── intent.md
-        ├── req.md
-        ├── design.md
-        ├── plan.md
-        └── verification/
+<项目根目录>/
+└── .agent/
+    └── harness/
+        ├── _baton.md          # 接力棒（主要状态文件）
+        ├── _analysis.md       # 分析产物
+        ├── _design.md         # 设计产物
+        ├── _implementation.md # 实现摘要
+        └── _verification.md   # 验证产物
 ```
 
-### state.yaml格式
+### _baton.md格式（接力棒）
 
-```yaml
-# 项目信息
-project: <project-name>
-projectId: <project-id>
-version: 3.1.0
-created_at: <timestamp>
-last_updated: <timestamp>
+```markdown
+# 🔄 ReqPlan-v3 接力棒
 
-# 上下文有效期（完整策略参见 core-context-tracker.md）
-context_expires_at: <timestamp>
-current_user: <user-id>
+## 元信息
 
-# 当前阶段
-current_phase: requirements | design | development | verification
-current_requirement: <req-id>
+| 字段 | 值 |
+|------|-----|
+| 项目 | {项目名称} |
+| 开始时间 | {ISO 8601} |
+| 最后更新 | {ISO 8601} |
+| 当前状态 | START | ANALYZE | CONFIRM | DESIGN | IMPLEMENT | VERIFY | JUDGE | DONE | FAILED |
+| 模式 | NORMAL | DESIGN_FIX | REVIEW_FIX | RETRY_FIX |
+| 重试计数 | {0/1/2} |
 
-# 进度追踪
-progress:
-  requirements: <percentage>      # 0-100
-  design: <percentage>            # 0-100
-  development: <percentage>       # 0-100
-  verification: <percentage>      # 0-100
-  overall: <percentage>           # 综合进度
+## 进度追踪
 
-# 需求列表
-requirements:
-  - id: <req-id>
-    title: <req-title>
-    description: <req-description>
-    status: pending | active | completed | cancelled
-    priority: P0 | P1 | P2
-    created_at: <timestamp>
-    updated_at: <timestamp>
+### 阶段完成情况
 
-# 任务列表（状态定义参见 core-task-management.md）
-tasks:
-  - id: <task-id>
-    title: <task-title>
-    description: <task-description>
-    requirementId: <req-id>
-    status: TODO | IN_PROGRESS | DONE | BLOCKED
-    estimated_hours: <number>
-    actual_hours: <number>
-    assignee: <user-id>
-    dependencies: [<task-id>]
-    created_at: <timestamp>
-    updated_at: <timestamp>
-    due_date: <timestamp>
+- [ ] START - 启动
+- [ ] ANALYZE - 分析
+- [ ] CONFIRM - 确认
+- [ ] DESIGN - 设计
+- [ ] IMPLEMENT - 实现
+- [ ] VERIFY - 验证
+- [ ] JUDGE - 判断
 
-# 里程碑
-milestones:
-  - id: <milestone-id>
-    title: <milestone-title>
-    deadline: <timestamp>
-    completed: boolean
+### 产物清单
 
-# 配置
-config:
-  auto_save: true
-  backup_interval: 300          # 备份间隔（秒）
-  context_timeout: 1800         # 上下文超时（秒）
+- [ ] `.agent/harness/_analysis.md` - 分析报告
+- [ ] `.agent/harness/_design.md` - 设计文档
+- [ ] `.agent/harness/_implementation.md` - 实现摘要
+- [ ] `.agent/harness/_verification.md` - 验证报告
+
+### ⭐ 任务追踪（统一管理）
+
+| # | 任务名称 | 状态 | 完成时间 | 备注 |
+|---|---------|------|---------|------|
+| 1 | {任务1} | ✅ 完成 | {时间} | {备注} |
+| 2 | {任务2} | 🔄 进行中 | - | {备注} |
+| 3 | {任务3} | ⏳ 待开始 | - | {备注} |
+
+**任务状态说明**：
+- ✅ 完成：任务已完成
+- 🔄 进行中：任务正在执行
+- ⏳ 待开始：任务还未开始
+- ❌ 失败：任务执行失败
+
+## 当前阶段详情
+
+### {状态名称}
+
+**进度**: {百分比}%
+**已完成任务**: {列表}
+**进行中任务**: {任务}
+**待完成任务**: {列表}
+
+## 问题记录
+
+### ⚠️ 阻塞问题
+{问题列表}
+
+### 💡 待确认事项
+{待确认事项}
+
+## 下一步行动
+
+### 立即执行（Next）
+1. {任务1}
+2. {任务2}
+3. {任务3}
+
+---
+
+*最后更新: {ISO 8601}*
 ```
 
-## 状态转换规则
+## 7阶段状态转换规则
 
-### 阶段转换
+### 主流程转换
 ```
-requirements → design → development → verification → completed
-     ↓            ↓            ↓             ↓
-   ←────←────←────←────←────←────←────←────←
+START → ANALYZE → CONFIRM → DESIGN → IMPLEMENT → VERIFY → JUDGE
+                                  ↓
+              ┌───────────────────┼───────────────────┐
+              ↓                   ↓                   ↓
+           ✅ DONE            🔧 DESIGN          🔄 IMPLEMENT
+                              (修复模式)         (重试模式)
+                             ↓         ↓      ↓         ↓
+                        ARCH问题   REVIEW问题  重试≤2   重试>2
+                             ↓         ↓      ↓         ↓
+                        继续DESIGN  继续IMP  继续IMP  ❌ FAILED
 ```
 
-**转换条件**：
-- `requirements → design`：需求文档已审核通过
-- `design → development`：设计文档已审核通过
-- `development → verification`：所有开发任务完成
-- `verification → completed`：验收通过
+### 阶段转换条件
+
+| 当前阶段 | 下一阶段 | 条件 |
+|---------|---------|------|
+| START | ANALYZE | 接力棒已创建，用户需求已记录 |
+| ANALYZE | CONFIRM | `_analysis.md` 已生成并验证通过 |
+| CONFIRM | DESIGN | 用户已确认需求 |
+| CONFIRM | ANALYZE | 用户要求修改需求 |
+| DESIGN | IMPLEMENT | `_design.md` 已生成并验证通过 |
+| IMPLEMENT | VERIFY | `_implementation.md` 已生成，所有任务完成 |
+| VERIFY | JUDGE | `_verification.md` 已生成，5层验证完成 |
+| JUDGE | DONE | 验证结果为 PASS |
+| JUDGE | DESIGN | 验证结果为 ARCHITECTURE_VIOLATION，进入 DESIGN_FIX 模式 |
+| JUDGE | IMPLEMENT | 验证结果为 REVIEW_VIOLATION，进入 REVIEW_FIX 模式 |
+| JUDGE | IMPLEMENT | 验证结果为 RUNTIME_FAILURE 且 retry < 2，进入 RETRY_FIX 模式 |
+| JUDGE | FAILED | retry >= 2 |
 
 ### 任务状态转换
 ```
-TODO → IN_PROGRESS → DONE
-  ↓        ↓         ↓
-BLOCKED ←──←────←──←
+⏳ 待开始 → 🔄 进行中 → ✅ 完成
+                ↓
+              ❌ 失败
 ```
 
 **转换条件**：
-- `TODO → IN_PROGRESS`：任务开始执行
-- `IN_PROGRESS → DONE`：任务完成
-- `IN_PROGRESS → BLOCKED`：任务阻塞
-- `BLOCKED → IN_PROGRESS`：阻塞解除
-- `BLOCKED/TODO → DONE`：跳过执行（直接标记完成）
+- `待开始 → 进行中`：任务开始执行
+- `进行中 → 完成`：任务完成
+- `进行中 → 失败`：任务执行失败
 
 ## 进度计算
 
-### 需求阶段进度
+### 阶段进度
 ```
-requirements_progress = (已完成需求数 / 总需求数) * 100
-```
-
-### 设计阶段进度
-```
-design_progress = (已审核设计文档数 / 总需求数) * 100
-```
-
-### 开发阶段进度
-```
-development_progress = (已完成任务数 / 总任务数) * 100
-```
-
-### 验收阶段进度
-```
-verification_progress = (已验收任务数 / 总任务数) * 100
+每个阶段的进度 = (已完成步骤数 / 总步骤数) × 100%
 ```
 
 ### 综合进度
 ```
-overall_progress = 
-  (requirements_weight * requirements_progress +
-   design_weight * design_progress +
-   development_weight * development_progress +
-   verification_weight * verification_progress) / 100
+overall_progress =
+  (START_weight * START_progress +
+   ANALYZE_weight * ANALYZE_progress +
+   CONFIRM_weight * CONFIRM_progress +
+   DESIGN_weight * DESIGN_progress +
+   IMPLEMENT_weight * IMPLEMENT_progress +
+   VERIFY_weight * VERIFY_progress +
+   JUDGE_weight * JUDGE_progress) / 100
 
 默认权重：
-- requirements_weight: 20
-- design_weight: 20
-- development_weight: 40
-- verification_weight: 20
-```
-
-## 上下文保持（参见 core-context-tracker.md 完整策略）
-
-- 状态文件中记录 `context_expires_at` 时间戳
-- 上下文 TTL、刷新时机、过期恢复等完整策略由 core-context-tracker.md 统一定义
-- `config.context_timeout` 已废弃，以 core-context-tracker.md 的三层 TTL 策略为准
+- START: 5
+- ANALYZE: 15
+- CONFIRM: 5
+- DESIGN: 20
+- IMPLEMENT: 30
+- VERIFY: 15
+- JUDGE: 10
 ```
 
 ## 快照机制
@@ -201,10 +216,10 @@ options:
 
 ### 快照文件结构
 ```
-.trae/reqplan/projects/<projectId>/snapshots/
-├── snapshot-20260514-100000.yaml
-├── snapshot-20260514-110000.yaml
-└── snapshot-20260514-120000.yaml
+<项目根目录>/.agent/harness/snapshots/
+├── baton-20260520-100000.md
+├── baton-20260520-110000.md
+└── baton-20260520-120000.md
 ```
 
 ### 快照恢复
@@ -216,14 +231,14 @@ data:
 
 ## 失败策略
 
-### E701 - 状态文件损坏
+### E701 - 接力棒文件损坏
 ```yaml
 E701:
-  error: "状态文件损坏"
-  message: "检测到状态文件损坏，正在尝试恢复..."
+  error: "接力棒文件损坏"
+  message: "检测到接力棒文件损坏，正在尝试恢复..."
   recovery:
-    - 尝试从备份文件恢复
-    - 如果备份也损坏，询问用户是否重新初始化
+    - 尝试从最近的快照恢复
+    - 如果快照也损坏，询问用户是否重新初始化
     - 提供手动恢复选项
 ```
 
@@ -237,163 +252,25 @@ E702:
     - 提供创建项目的流程
 ```
 
-### E703 - 上下文过期
+### E703 - 状态版本不兼容
 ```yaml
 E703:
-  error: "上下文已过期"
-  message: "您的会话已过期，请重新选择需求"
-  recovery:
-    - 列出最近的需求供用户选择
-    - 提供创建新需求的选项
-```
-
-### E704 - 状态版本不兼容
-```yaml
-E704:
   error: "状态版本不兼容"
-  message: "状态文件版本与当前版本不兼容"
+  message: "接力棒文件版本与当前版本不兼容"
   recovery:
-    - 尝试自动升级状态文件
+    - 尝试自动升级接力棒格式
     - 如果升级失败，提示手动迁移
 ```
 
-## 示例
-
-### 示例1：获取状态
-```yaml
-Input:
-- projectId: "my-project"
-- action: "get"
-
-Output:
-- success: true
-- state:
-    project: "我的项目"
-    current_phase: "development"
-    progress:
-      overall: 50
-- message: "状态获取成功"
-```
-
-### 示例2：更新进度
-```yaml
-Input:
-- projectId: "my-project"
-- action: "update"
-- data:
-    current_phase: "verification"
-    progress:
-      development: 100
-      verification: 0
-
-Output:
-- success: true
-- message: "状态更新成功"
-```
-
-### 示例3：创建快照
-```yaml
-Input:
-- projectId: "my-project"
-- action: "snapshot"
-- options:
-    reason: "发布前备份"
-
-Output:
-- success: true
-- filePath: ".trae/reqplan/projects/my-project/snapshots/snapshot-20260514-100000.yaml"
-- message: "快照创建成功"
-```
-
-## 状态锁机制（v3.2新增）
-
-### 问题背景
-多会话并发操作同一项目时，可能出现写入覆盖导致的数据丢失：
-```
-会话A: 更新需求 → 写入 state.yaml      会话B: 更新任务 → 写入 state.yaml
-       ↓                                    ↓
-  写入成功（版本X）                      写入成功（版本X，覆盖了A的更新）
-```
-
-### 锁文件协议
-```yaml
-# 锁文件位置: .trae/reqplan/projects/<projectId>/state.lock
-# 详细数据结构见: 4-schemas/schema-state-lock.md
-
-锁操作三步法:
-  /reqplan lock acquire [--description "<操作说明>"]
-  # 执行操作（读取 → 修改 → 写入）
-  /reqplan lock release [--force]
-
-  # 查看锁状态
-  /reqplan lock status
-
-  # 强制获取（仅在确认旧会话已断开时使用）
-  /reqplan lock acquire --force
-```
-
-### state.yaml 锁相关字段
-```yaml
-# 在 state.yaml 中新增的锁字段
-state_version: 3                   # 状态模型版本号
-lock_version: 5                    # 乐观锁版本号
-lock_status: "locked" | "unlocked" | "stale"
-last_lock_session: "session-abc123"
-last_lock_time: "2026-05-14T10:30:00Z"
-```
-
-### 写入流程（加锁版）
-```yaml
-# 所有写操作必须遵循以下流程
-1. acquire_lock → 获取锁
-2. 读取 state.yaml，记录 lock_version（记为 V）
-3. 执行修改
-4. 检查 lock_version 是否仍是 V（未被其他会话修改）
-5. 是 → 写入 state.yaml，设置 lock_version = V+1
-6. 否 → 返回 E802 版本冲突，提示重新读取
-7. release_lock → 释放锁
-```
-
-### 并发错误处理
-
-#### E801 - 锁被占用
-```yaml
-E801:
-  error: "状态锁被占用"
-  message: "当前项目状态锁已被其他会话持有"
-  recovery:
-    - 提示持有者和剩余时间
-    - 提供等待选项
-    - 提供强制获取选项（/reqplan lock acquire --force）
-```
-
-#### E802 - 版本冲突
-```yaml
-E802:
-  error: "状态版本冲突"
-  message: "自读取后状态已被其他会话修改，无法提交"
-  recovery:
-    - 重新读取最新状态
-    - 手动合并变更
-    - 重新获取锁后再次尝试
-```
-
-### 自动锁清理
-- 锁持有超过 max_hold_time（默认10分钟）自动标记为 stale
-- 跨会话恢复时自动检查并清理脏锁
-- 每次成功写入后自动释放锁
-
 ## 最佳实践
 
-1. **定期备份**：建议每5分钟自动备份一次状态
-2. **事务性更新**：确保状态更新的原子性（获取锁 → 读取 → 修改 → 写入 → 释放锁）
-3. **上下文管理**：及时清理过期的上下文
-4. **版本兼容**：处理不同版本的状态文件
-5. **错误恢复**：提供清晰的错误信息和恢复路径
-6. **锁规范（v3.2）**：长操作间拆为"预检 → 操作 → 提交"三步，减少锁持有时间
+1. **每次交互后更新接力棒**：确保状态持久化
+2. **事务性更新**：确保状态更新的原子性
+3. **定期创建快照**：建议每完成一个阶段创建快照
+4. **错误恢复**：提供清晰的错误信息和恢复路径
 
 ## 版本信息
 
-**版本**: 3.2.0
-**更新时间**: 2026-05-14
-**引用**: 4-schemas/schema-state.md, 4-schemas/schema-context.md, 4-schemas/schema-state-lock.md, 3-core/core-context-tracker.md
+**版本**: 4.1
+**更新时间**: 2026-05-20
+**引用**: ../protocols/baton-protocol.md, ../protocols/phase-protocol.md

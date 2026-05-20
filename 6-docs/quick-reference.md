@@ -48,8 +48,6 @@
 |------|------|------|
 | `/reqplan status` | 查看全局状态 | `/reqplan status` |
 | `/reqplan status --detail` | 查看详细状态 | `/reqplan status --detail` |
-| `/reqplan history` | 查看流程历史 | `/reqplan history` |
-| `/reqplan history --detail` | 查看详细历史（含决策日志） | `/reqplan history --detail` |
 
 ### 任务管理
 
@@ -74,26 +72,6 @@
 |------|------|------|
 | `/reqplan verify [--level <1-5>]` | 执行验证验收 | `/reqplan verify --level 5` |
 | `/reqplan sync [--dry-run]` | 文件同步检测 | `/reqplan sync --dry-run` |
-
-### 上下文管理（v3.2 新增）
-
-| 命令 | 说明 | 示例 |
-|------|------|------|
-| `/reqplan context status` | 查看上下文健康度 | `/reqplan context status` |
-| `/reqplan context decisions` | 查看决策日志 | `/reqplan context decisions` |
-| `/reqplan context compact` | 手动收敛上下文 | `/reqplan context compact` |
-| `/reqplan context snapshot` | 创建上下文快照 | `/reqplan context snapshot` |
-| `/reqplan context restore <id>` | 恢复到指定快照 | `/reqplan context restore snap-001` |
-| `/reqplan context archive list` | 查看归档记录 | `/reqplan context archive list` |
-
-### 状态锁管理（v3.2 新增）
-
-| 命令 | 说明 | 示例 |
-|------|------|------|
-| `/reqplan lock status` | 查看锁状态 | `/reqplan lock status` |
-| `/reqplan lock acquire` | 获取状态锁 | `/reqplan lock acquire` |
-| `/reqplan lock acquire --force` | 强制获取锁 | `/reqplan lock acquire --force` |
-| `/reqplan lock release` | 释放状态锁 | `/reqplan lock release` |
 
 ### 系统命令
 
@@ -123,7 +101,7 @@
 ### 引导
 - "下一步"、"该做什么"、"引导我"、"继续"
 
-## 状态概览格式（v3.2）
+## 状态概览格式（v3.3）
 
 ```
 📊 当前状态：
@@ -132,21 +110,16 @@
 ├── 子流程：设计评审流程（步骤3/7）
 ├── 里程碑已达成：M1 ✅
 ├── 进度：40% [████████░░░░]
-├── 上下文：健康（1200/4000 tokens）
-├── 锁状态：未锁定
 └── 全局任务：3个（P0:1, P1:1, P2:1）
 ```
 
-## 下一步推荐格式（v3.2）
+## 下一步推荐格式（v3.3）
 
 ```
 📌 下一步推荐：
 1️⃣ 继续当前阶段 → "/reqplan guide"（推荐）
 2️⃣ 查看子流程状态 → "/reqplan status --detail"
-3️⃣ 查看决策日志 → "/reqplan context decisions"
-4️⃣ 创建上下文快照 → "/reqplan context snapshot"
-5️⃣ 获取状态锁 → "/reqplan lock acquire"
-6️⃣ 切换流程 → "/reqplan flow list"
+3️⃣ 切换流程 → "/reqplan flow list"
 ```
 
 ## 任务状态
@@ -164,7 +137,7 @@
 |------|------|------|
 | `--help` | 查看帮助 | `/reqplan start --help` |
 | `--dry-run` | 预览不执行 | `/reqplan sync --dry-run` |
-| `--quiet` | 静默模式 | `/reqplan lock acquire --quiet` |
+| `--quiet` | 静默模式 | `/reqplan sync --quiet` |
 | `--json` | JSON 格式输出 | `/reqplan status --json` |
 
 ## 快速流程：完整项目超级流程

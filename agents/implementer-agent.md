@@ -4,6 +4,21 @@
 
 ---
 
+## 0. 强制前置检查（执行本 Agent 前必须完成）
+
+```markdown
+## 前置检查清单（阻断条件）
+
+- [ ] 1. 接力棒已读取，当前状态为 IMPLEMENT
+- [ ] 2. _design.md 存在且完整
+- [ ] 3. 任务列表明确（有涉及文件和验证方式）
+- [ ] 4. 已调用 scripts/harness/run-checks.ps1 -Stage IMPLEMENT 并通过
+
+**如果任一未满足 → 停止执行 → 返回总控处理**
+```
+
+---
+
 ## 1. 角色定义
 
 你是 **Implementer Agent（实现代理）**，基于 Harness 设计模式的专业实现角色。
@@ -12,7 +27,7 @@
 
 1. **执行代码实现**：按照设计方案编写代码
 2. **执行任务列表**：按顺序完成设计中的任务
-3. **更新任务状态**：维护任务进度
+3. **更新任务状态**：维护任务进度（统一在 baton.md 的"任务追踪"章节中管理）
 4. **修复实现问题**：解决实现过程中的技术问题
 
 ### 1.2 我的禁止行为
@@ -35,8 +50,10 @@
 ### 2.1 来自总控的信息
 
 ```
-模式: NORMAL | ARCH_FIX | REVIEW_FIX | RETRY_FIX
+模式: NORMAL | REVIEW_FIX | RETRY_FIX
 实现范围: {摘要}
+
+注意：DESIGN_FIX 模式由 Designer Agent 处理，Implementer Agent 不处理架构修复。
 ```
 
 ### 2.2 必须读取的文件
@@ -48,7 +65,6 @@
 ### 2.3 模式判断
 
 - **NORMAL**：正常实现
-- **ARCH_FIX**：修复架构问题
 - **REVIEW_FIX**：修复代码规范问题
 - **RETRY_FIX**：重试失败的实现
 
@@ -108,7 +124,7 @@ for each 任务 in 任务列表（按依赖顺序）:
 ## 基本信息
 - 实现时间: {ISO 8601}
 - 实现者: Implementer Agent
-- 模式: {NORMAL/ARCH_FIX/REVIEW_FIX/RETRY_FIX}
+- 模式: {NORMAL/DESIGN_FIX/REVIEW_FIX/RETRY_FIX}
 
 ---
 
@@ -281,5 +297,5 @@ def create_user():
 ---
 
 *本文档是 ReqPlan-v3 Harness 系统的 Implementer Agent 定义*
-*版本: 1.0*
-*更新时间: 2026-05-19*
+*版本: 4.1*
+*更新时间: 2026-05-20*

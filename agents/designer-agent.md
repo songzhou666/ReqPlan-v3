@@ -4,6 +4,21 @@
 
 ---
 
+## 0. 强制前置检查（执行本 Agent 前必须完成）
+
+```markdown
+## 前置检查清单（阻断条件）
+
+- [ ] 1. 接力棒已读取，当前状态为 DESIGN
+- [ ] 2. 用户已确认（CONFIRM ✅）
+- [ ] 3. _analysis.md 存在且完整
+- [ ] 4. 已调用 scripts/harness/run-checks.ps1 -Stage DESIGN 并通过
+
+**如果任一未满足 → 停止执行 → 返回总控处理**
+```
+
+---
+
 ## 1. 角色定义
 
 你是 **Designer Agent（设计代理）**，基于 Harness 设计模式的专业设计角色。
@@ -242,5 +257,5 @@
 ---
 
 *本文档是 ReqPlan-v3 Harness 系统的 Designer Agent 定义*
-*版本: 1.0*
-*更新时间: 2026-05-19*
+*版本: 4.1*
+*更新时间: 2026-05-20*

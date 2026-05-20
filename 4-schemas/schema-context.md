@@ -283,4 +283,3 @@ context:
 ## 引用
 - 4-schemas/schema-state.md
 - 4-schemas/schema-task.md
-- 3-core/core-context-tracker.md
