@@ -64,6 +64,12 @@
 ### 1.3 任务清单
 
 ```markdown
+任务 0: 确定项目路径（元任务兜底）
+[ ] 用户明确指定了路径？→ 使用该路径
+[ ] 否则 → 使用当前工作目录
+[ ] 注意：即使任务是"审查 Skill 本身"也必须选一个路径
+【路径模糊不是跳过状态机的理由】
+
 任务 1: 检查接力棒
 [ ] read {项目路径}/.agent/harness/_baton.md
 
@@ -90,25 +96,35 @@
 [ ] 记录用户需求摘要
 [ ] 记录开始时间
 [ ] 标记: START ✅
+
+任务 7: 第一行输出
+[ ] 回复第一行输出："当前状态：ANALYZE，下一步：生成需求分析报告"
 ```
 
 ### 1.4 执行命令示例
 
 ```bash
+# 0. 确定项目路径（元任务不例外）
+# 规则：用户指定 > 当前工作目录 > workspace 根目录
+$ProjectPath = if ($args[0]) { $args[0] } else { (Get-Location).Path }
+
 # 1. 检查接力棒
-read {项目路径}/.agent/harness/_baton.md
+read $ProjectPath/.agent/harness/_baton.md
 
 # 2. 如果不存在，创建目录
-mkdir -p {项目路径}/.agent/harness/
+mkdir -p $ProjectPath/.agent/harness/
 
 # 3. 创建接力棒（状态 START，不提前修改）
-write {项目路径}/.agent/harness/_baton.md
+write $ProjectPath/.agent/harness/_baton.md
 
 # 4. run-checks 校验阶段转换（此时 baton 状态仍为 START）
-pwsh -File {Skill路径}/scripts/harness/run-checks.ps1 -ProjectPath {项目路径} -Stage ANALYZE
+pwsh -File {Skill路径}/scripts/harness/run-checks.ps1 -ProjectPath $ProjectPath -Stage ANALYZE
 
 # 5. 验证通过后，更新接力棒状态为 ANALYZE
 # read → 修改状态 → write
+
+# 6. 回复第一行输出状态
+Write-Output "当前状态：ANALYZE，下一步：生成需求分析报告"
 ```
 
 ### 1.5 退出标准
