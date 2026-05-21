@@ -13,7 +13,7 @@
 - [ ] 2. _design.md 存在
 - [ ] 3. _implementation.md 存在
 - [ ] 4. 代码已保存到文件系统（不是只在对话中）
-- [ ] 5. 已调用 scripts/harness/run-checks.ps1 -Stage VERIFY 并通过
+- [ ] 5. 前置 IMPLEMENT 阶段已通过 run-checks 校验（进入 VERIFY）
 
 **如果任一未满足 → 停止执行 → 返回总控处理**
 ```
@@ -223,6 +223,23 @@ Web 项目场景：
 - 文档与代码同步
 - 代码规范符合项目要求
 
+### 3.6 详细验证命令参考
+
+各层级对应的实际可执行命令参考：
+
+| 层级 | 检查项 | 命令 (Python) | 命令 (Node.js) | 通过标准 |
+|------|--------|---------------|----------------|----------|
+| L1 静态检查 | 代码风格 | `ruff check {files}` | `npm run lint` | 零 Error |
+| L1 静态检查 | 类型检查 | `mypy {files}` | `npm run typecheck` | 零类型错误 |
+| L1 静态检查 | 格式检查 | `black --check .` | `prettier --check .` | 无格式差异 |
+| L2 单元测试 | 单测执行 | `pytest tests/ -v --tb=short` | `npm run test` | 通过率 ≥ 90% |
+| L2 单元测试 | 覆盖率 | `pytest --cov=. tests/` | `npm run test -- --coverage` | P0 覆盖 ≥ 80% |
+| L3 构建集成 | 编译检查 | `python -m py_compile {files}` | `npm run build` | 编译无错误 |
+| L3 构建集成 | 依赖安装 | `pip install -r requirements.txt` | `npm install` | 安装成功 |
+| L4 异常处理 | 异常输入 | 传入无效/空值参数 | API 400/404 测试 | 不崩溃，提示明确 |
+| L4 异常处理 | 超时处理 | 模拟超时场景 | 超时中间件测试 | 触发预期策略 |
+| L5 流程合规 | 产物检查 | 检查 `_analysis.md` 等文件存在 | — | 所有产物完整 |
+
 ---
 
 ## 4. 工作流程
@@ -266,127 +283,19 @@ Web 项目场景：
 
 ### 5.1 产物文件
 
-```
 {项目路径}/.agent/harness/_verification.md
-```
 
-### 5.2 报告模板
+### 5.2 模板参考
 
-```markdown
-# 验证报告
+产物模板定义请参考 [artifacts/template-artifacts.md](../artifacts/template-artifacts.md) 中对应的验证报告模板。
 
-## 基本信息
-- 验证时间: {ISO 8601}
-- 验证者: Verifier Agent
-- 关联设计: _design.md
-
----
-
-## Layer 1: 静态检查
-
-### 1.1 工具结果
-| 工具 | 命令 | 结果 |
-|------|------|------|
-| pylint | `pylint app.py` | ✅ 通过 / ❌ 失败 |
-| ruff | `ruff check .` | ✅ 通过 / ❌ 失败 |
-| mypy | `mypy app.py` | ✅ 通过 / ❌ 失败 |
-
-### 1.2 违规列表
-| # | 问题 | 文件 | 行号 | 类型 |
-|---|------|------|------|------|
-| 1 | {问题} | {文件} | {行号} | {WARNING/ERROR} |
-
----
-
-## Layer 2: 单元测试
-
-### 2.1 测试结果
-- 测试框架: pytest
-- 总测试数: {数量}
-- 通过数: {数量}
-- 失败数: {数量}
-- 覆盖率: {百分比}
-
-### 2.2 失败的测试
-| # | 测试 | 错误 |
-|---|------|------|
-| 1 | {测试名} | {错误信息} |
-
----
-
-## Layer 3: 构建集成
-
-### 3.1 构建结果
-| 命令 | 结果 |
-|------|------|
-| `python -m py_compile` | ✅ 通过 / ❌ 失败 |
-| `pip install` | ✅ 通过 / ❌ 失败 |
-
-### 3.2 失败详情
-```
-{错误信息}
-```
-
----
-
-## Layer 4: 异常处理
-
-### 4.1 测试场景
-| # | 场景 | 预期 | 实际 | 状态 |
-|---|------|------|------|------|
-| 1 | 401 未授权 | 401 | 401 | ✅ |
-| 2 | 403 禁止 | 403 | 403 | ✅ |
-
-### 4.2 失败场景
-| # | 场景 | 预期 | 实际 | 问题 |
-|---|------|------|------|------|
-| 1 | {场景} | {预期} | {实际} | {问题} |
-
----
-
-## Layer 5: 流程合规
-
-### 5.1 产物检查
-| # | 产物 | 存在 | 完整 |
-|---|------|------|------|
-| 1 | _analysis.md | ✅ | ✅ |
-| 2 | _design.md | ✅ | ✅ |
-| 3 | _implementation.md | ✅ | ✅ |
-
-### 5.2 文档检查
-| # | 检查项 | 状态 |
-|---|--------|------|
-| 1 | README 更新 | ✅ |
-| 2 | API 文档更新 | ✅ |
-
----
-
-## 综合判定
-
-### 判定结果
-**状态**: ✅ PASS / ❌ FAIL
-
-### 错误分类
-| # | 错误类型 | 数量 | 详情 |
-|---|----------|------|------|
-| 1 | ARCHITECTURE_VIOLATION | 0 | 架构违规 |
-| 2 | REVIEW_VIOLATION | 0 | 规范问题 |
-| 3 | RUNTIME_FAILURE | 0 | 运行失败 |
-| 4 | ENVIRONMENT | 0 | 环境问题 |
-
-### 下一步
-- PASS → JUDGE → DONE ✅
-- ARCHITECTURE → JUDGE → DESIGN(修复)
-- REVIEW → JUDGE → IMPLEMENT(修复)
-- RUNTIME & retry < 2 → JUDGE → IMPLEMENT(重试)
-- retry >= 2 → JUDGE → FAILED ❌
-
----
-
-*本文档由 Verifier Agent 自动生成*
-*版本: 1.0*
-*时间: {ISO 8601}*
-```
+**关键结构要求**：
+- Layer 1: 静态检查结果表格
+- Layer 2: 单元测试结果（通过数/总数）
+- Layer 3: 构建集结果
+- Layer 4: 异常处理场景
+- Layer 5: 流程合规检查
+- 综合判定：PASS/FAIL + 错误分类
 
 ---
 

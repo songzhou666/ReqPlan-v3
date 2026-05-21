@@ -1,10 +1,11 @@
-﻿<#
+<#
 .SYNOPSIS
   验证计划文件中定义的真实入口点是否可达
 .DESCRIPTION
   读取 .agent/plans/ 中最新的计划文件，提取 Entry Points 表格中的文件路径和命令，
   逐一验证文件是否存在、命令是否可执行。
   对应 Task Pipeline Stage 2 门控：入口点真实可触达。
+  注意：本脚本检查的是 v3.3 的 .agent/plans/ 路径，v4.x 已改用 .agent/harness/ 产物
 .EXAMPLE
   .\validate-entry-points.ps1
   输出每个入口点的验证状态和最终结果。
@@ -13,7 +14,7 @@
 $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $plansDir = Join-Path $projectRoot ".agent\plans"
 
-Write-Host "=== 入口点有效性验证 ==="
+Write-Host "=== 入口点有效性验证 (v3.3 遗留) ==="
 Write-Host ""
 
 # 查找最新的计划文件
@@ -62,7 +63,6 @@ function Test-NpmScript {
 # 辅助函数：检查 Python 模块路径
 function Test-PythonModule {
     param([string]$modulePath)
-    # 支持嵌套路径: from package.sub.module import X → package/sub/module.py
     $parts = $modulePath -split '\.'
     $pyPaths = @()
     for ($i = 0; $i -lt $parts.Count; $i++) {
@@ -85,7 +85,6 @@ function Test-AnyCommand {
 
 # 解析 Entry Points 表格和命令块
 foreach ($line in $lines) {
-    # 检测命令块（``` 包裹的入口命令，支持语言标记）
     if ($line -match '^```\w*$' -and $inCommandBlock) {
         $inCommandBlock = $false
         continue
@@ -101,7 +100,6 @@ foreach ($line in $lines) {
         }
     }
 
-    # 检测 Entry Points 表格行
     if ($line -match '^\|\s*(command|file|api|config|script)\s*\|') {
         $parts = $line -split '\|' | ForEach-Object { $_.Trim() }
         if ($parts.Count -ge 3) {

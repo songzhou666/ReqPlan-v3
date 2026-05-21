@@ -1,9 +1,10 @@
-﻿<#
+<#
 .SYNOPSIS
   检查 Harness 目录结构完整性
 .DESCRIPTION
   验证所有 12 个 Landing Zone 是否就位，输出缺失项清单。
   对应 Task Pipeline Stage 1 门控：确认 landing zone 就绪。
+  注意：本脚本检查的是 v3.3 路径体系，v4.x 已改用 .agent/harness/
 .EXAMPLE
   .\check-structure.ps1
   输出每个 landing zone 的检查状态和最终结果。
@@ -29,7 +30,7 @@ $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $failCount = 0
 $warnCount = 0
 
-Write-Host "=== Harness 目录结构检查 ==="
+Write-Host "=== Harness 目录结构检查 (v3.3 遗留) ==="
 Write-Host "项目根目录: $projectRoot"
 Write-Host ""
 

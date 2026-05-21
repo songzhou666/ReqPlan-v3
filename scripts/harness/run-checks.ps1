@@ -8,7 +8,7 @@
   3. 阶段转换合法性检查
   任何单项检查失败都会阻断流程。
 .EXAMPLE
-  .\run-checks.ps1 -ProjectPath E:/web_tools -Stage DESIGN
+  .\run-checks.ps1 -ProjectPath {项目路径} -Stage DESIGN
 #>
 
 param(
@@ -16,7 +16,7 @@ param(
     [string]$ProjectPath,
 
     [Parameter(Mandatory=$true)]
-    [ValidateSet("START", "ANALYZE", "CONFIRM", "DESIGN", "IMPLEMENT", "VERIFY", "JUDGE")]
+    [ValidateSet("START", "ANALYZE", "CONFIRM", "DESIGN", "IMPLEMENT", "VERIFY", "JUDGE", "DONE", "ABORT", "FAILED")]
     [string]$Stage
 )
 

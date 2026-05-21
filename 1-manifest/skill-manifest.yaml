@@ -4,10 +4,10 @@
 skill:
   id: "ReqPlan-v3"
   name: "ReqPlan-v3 软件开发引导专家"
-  version: "3.0.0"
+  version: "4.2"
   author: "songzhou"
   created_at: "2026-05-15"
-  updated_at: "2026-05-15"
+  updated_at: "2026-05-21"
 
   # Skill分类与标签
   category: "development"
@@ -92,23 +92,26 @@ skill:
     - "读取Git提交历史"
     - "创建项目文档"
 
-  # 输出文件说明
+  # 输出文件说明（与 SKILL.md / protocols/baton-protocol.md 一致）
   output_files:
-    business_docs:
-      root: "docs/reqplan"
-      description: "业务文档，建议提交到Git仓库"
+    runtime_state:
+      root: ".agent/harness/"
+      description: "运行时状态与产物（每任务独立）"
+      files:
+        - "_baton.md"
+        - "_analysis.md"
+        - "_design.md"
+        - "_implementation.md"
+        - "_verification.md"
+    long_term_archive:
+      root: "docs/harness/"
+      description: "长期归档（跨任务持久化，建议提交到Git仓库）"
+      files:
+        - "history.yaml"
+        - "decisions.yaml"
       subdirs:
-        - "plans/"
-        - "harness/"
-        - "designs/"
-        - "requirements/"
-    internal_data:
-      root: ".trae/skills/ReqPlan-v3/9-data"
-      description: "Skill内部数据，建议加入.gitignore"
-      subdirs:
-        - "history/"
-        - "state/"
-        - "cache/"
+        - "reviews/"
+        - "fixes/"
 
   # 兼容性
   compatibility:

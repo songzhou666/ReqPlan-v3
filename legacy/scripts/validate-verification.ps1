@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   验证验证报告是否覆盖全部5层验证体系
 .DESCRIPTION
@@ -9,6 +9,7 @@
   - Failure (失败场景验证)
   - Writeback (回写验证)
   对应 Action: action_verify 的后置校验。
+  注意：本脚本检查的是 v3.3 格式，v4.x 已改用 .agent/harness/_verification.md
 .PARAMETER Path
   验证报告目录或文件路径。默认搜索 docs/test/ 下的 verification-*.yaml 或 summary 文件。
 .EXAMPLE
@@ -27,7 +28,7 @@ $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $failCount = 0
 $warnCount = 0
 
-Write-Host "=== 验证报告5层全覆盖校验 ==="
+Write-Host "=== 验证报告5层全覆盖校验 (v3.3 遗留) ==="
 Write-Host ""
 
 # 5层验证定义 (对应 core-verification.md)

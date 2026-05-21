@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   检查最新计划文件是否包含实现路径格式的必需章节
 .DESCRIPTION
@@ -6,6 +6,7 @@
   - 范围冻结四要素（Scope/Non-Goals/Validation/Rollback）
   - 实现路径核心章节（Entry Points/组件职责/验证命令/回写目标）
   对应 Task Pipeline Stage 2 门控：计划格式完整合规。
+  注意：本脚本检查的是 v3.3 的 .agent/plans/ 路径，v4.x 已改用 .agent/harness/_design.md
 .EXAMPLE
   .\check-plan.ps1
   输出计划文件各章节的检查状态和最终结果。
@@ -14,7 +15,7 @@
 $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $plansDir = Join-Path $projectRoot ".agent\plans"
 
-Write-Host "=== 计划文件格式检查 ==="
+Write-Host "=== 计划文件格式检查 (v3.3 遗留) ==="
 Write-Host ""
 
 # 查找最新的计划文件

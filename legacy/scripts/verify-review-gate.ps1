@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   验证评审门禁是否满足关闭条件
 .DESCRIPTION
@@ -8,6 +8,7 @@
   - 所有已关闭问题有关闭理由
   - 存在质量评分
   对应 Action: action_review 的后置校验。
+  注意：本脚本检查的是 v3.3 格式，v4.x 已改用 .agent/harness/ 产物 + 审查清单
 .PARAMETER Path
   评审报告文件路径。默认搜索 docs/review/ 或 .trae/reqplan/ 下的 review-*.yaml 或 report。
 .EXAMPLE
@@ -26,7 +27,7 @@ $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $failCount = 0
 $warnCount = 0
 
-Write-Host "=== 评审门禁检查 ==="
+Write-Host "=== 评审门禁检查 (v3.3 遗留) ==="
 Write-Host ""
 
 # 确定目标文件
@@ -98,7 +99,6 @@ $severityLevels = @(
 $openCriticalMajor = $false
 
 foreach ($severity in $severityLevels) {
-    # 检查该级别的问题是否存在
     $foundIssues = @()
     foreach ($pattern in $severity.Patterns) {
         if ($content -match "(?i)$pattern") {
@@ -109,10 +109,7 @@ foreach ($severity in $severityLevels) {
     if ($foundIssues.Count -gt 0) {
         Write-Host "[PASS] 包含 $($severity.Name) 级别问题定义"
 
-        # 对于 Critical 和 Major，检查是否还有未关闭的问题
         if ($severity.Name -eq "Critical" -or $severity.Name -eq "Major") {
-            # 尝试判断是否有未关闭的
-            $openPattern = "(?i)$($severity.Name).{0,50}(?!(已关闭|closed|fixed|已修复|已解决|完成))"
             $stillOpen = $content -match "(?i)$($severity.Name).{0,200}(open|pending|未关闭|待处理|未解决|进行中)"
 
             if ($stillOpen) {
@@ -128,7 +125,6 @@ foreach ($severity in $severityLevels) {
     }
 }
 
-# 建议/改进建议检查
 Write-Host ""
 Write-Host "-- 改进建议完整性 --"
 if ($content -match "(?i)(suggestions|改进建议|建议|recommend)") {
@@ -138,7 +134,6 @@ if ($content -match "(?i)(suggestions|改进建议|建议|recommend)") {
     $warnCount++
 }
 
-# 评分分布检查（如果有多个维度的评分）
 Write-Host ""
 Write-Host "-- 多维度评分检查 --"
 $dimensionScores = @("一致性", "质量", "规范", "安全", "性能")

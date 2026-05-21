@@ -8,13 +8,14 @@
 
 ### 1.1 产物契约验证
 
-每个 Agent 的产物必须满足契约要求：
+每个 Agent 的产物必须满足契约要求（模板详见 artifacts/template-artifacts.md）：
 
-| Agent | 产物 | 契约要求 |
+| Agent | 产物 | 存储位置 |
 |-------|------|----------|
-| Analyzer | `_analysis.md` | 必须包含：基本信息、需求理解、项目现状、约束条件、分析结论 |
-| Designer | `_design.md` | 必须包含：需求回顾、架构设计、任务计划、验证方案 |
-| Verifier | `_verification.md` | 必须包含：验证结果、错误分类、修复建议、最终判定 |
+| Analyzer | `_analysis.md` | `.agent/harness/` |
+| Designer | `_design.md` | `.agent/harness/` |
+| Implementer | `_implementation.md` | `.agent/harness/` |
+| Verifier | `_verification.md` | `.agent/harness/` |
 
 ### 1.2 状态机验证
 
@@ -22,10 +23,9 @@
 
 ```
 ✓ 允许的转移：
-  - INIT → START
   - START → ANALYZE
   - ANALYZE → CONFIRM
-  - CONFIRM → DESIGN | ABORT
+  - CONFIRM → DESIGN | ANALYZE | ABORT
   - DESIGN → IMPLEMENT
   - IMPLEMENT → VERIFY
   - VERIFY → JUDGE
@@ -67,14 +67,14 @@ grep "状态" {项目路径}/.agent/harness/_*.md
 cat {项目路径}/docs/harness/history.yaml
 ```
 
-### 2.3 检查计划文件
+### 2.3 检查任务追踪
 
 ```bash
-# 检查任务计划
-ls -la {项目路径}/.agent/plans/
+# 检查接力棒中的任务追踪
+cat {项目路径}/.agent/harness/_baton.md | grep -A 20 "任务追踪"
 
-# 检查特定计划
-cat {项目路径}/.agent/plans/{date}-{module}.md
+# 检查长期归档
+cat {项目路径}/docs/harness/history.yaml
 ```
 
 ---
@@ -167,7 +167,7 @@ cat {项目路径}/.agent/harness/_verification.md | grep "验证时间"
 ```bash
 # 查找失败记录
 grep -r "FAIL" {项目路径}/.agent/harness/
-grep -r "FAILED" {项目路径}/.agent/plans/
+grep -r "FAILED" {项目路径}/.agent/harness/
 
 # 查看失败详情
 cat {项目路径}/.agent/harness/_verification.md | grep -A 10 "错误详情"
@@ -295,7 +295,7 @@ _verification.md 必须包含：
 测试场景：
 1. 启动 ReqPlan
 2. 输入需求："做一个用户登录功能"
-3. 检查状态转移：INIT → START → ANALYZE → CONFIRM
+3. 检查状态转移：START → ANALYZE → CONFIRM
 4. 确认需求
 5. 检查状态转移：CONFIRM → DESIGN → IMPLEMENT → VERIFY
 6. 检查状态转移：VERIFY → JUDGE → DONE

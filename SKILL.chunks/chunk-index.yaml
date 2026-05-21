@@ -25,11 +25,11 @@
 
 ### 按命令触发
 
-| 命令 | 分块 |
-|------|------|
-| /reqplan init | 02 |
-| /reqplan guide | 01 |
-| /reqplan 开发 | 01, 02 |
-| /reqplan 分析 | 01, 02 |
-| /reqplan 修复 | 01, 02 |
-| /reqplan status | 04 |
+| 命令 | 分块 | 说明 |
+|------|------|------|
+| /reqplan init | 02 | 初始化 Harness 目录 |
+| /reqplan guide | 01 | 意图引导 |
+| /reqplan 开发 | 01, 02 | 开发流程 |
+| /reqplan 分析 | 01, 02 | 分析流程 |
+| /reqplan 修复 | 01, 02 | 修复流程 |
+| /reqplan status | 04 | 查看状态 |

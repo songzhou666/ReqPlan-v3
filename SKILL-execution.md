@@ -1,47 +1,14 @@
 # ReqPlan-v3 执行指南 (v4.1)
 
-> **本文档是 ReqPlan-v3 的核心执行手册。每次激活 Skill 时，必须按照本指南执行。**
+> **本文档是 ReqPlan-v3 的阶段执行手册。每次激活 Skill 后，按当前状态读取对应的阶段详解执行。**
 >
 > **核心原则**：不做完当前阶段的强制检查点，就无法进入下一阶段。
+>
+> **入口检查请参考 SKILL.md**：包含完整的强制入口检查清单、状态机、防跳过/防遗忘机制。
 
 ---
 
-## 一、激活后的强制第一步
-
-### 1.1 状态自检（必须执行，不做无法继续）
-
-每次收到用户输入，立即执行以下自检：
-
-```markdown
-## 强制自检清单
-
-- [ ] 1. 我已读取接力棒（_baton.md）
-- [ ] 2. 我知道当前状态（START/ANALYZE/CONFIRM/DESIGN/IMPLEMENT/VERIFY/JUDGE）
-- [ ] 3. 我知道当前阶段该做什么
-- [ ] 4. 我已读取当前阶段对应的 Agent 指南
-
-**阻断规则**：以上任一未勾选 → 停止执行 → 先完成自检
-```
-
-### 1.2 接力棒读取流程
-
-```bash
-# 步骤 1：尝试读取接力棒
-read {项目路径}/.agent/harness/_baton.md
-
-# 步骤 2：判断结果
-if 文件存在:
-    提取当前状态
-    按状态续跑
-else:
-    创建目录 mkdir -p {项目路径}/.agent/harness/
-    创建接力棒（状态=START）
-    进入 START 阶段
-```
-
----
-
-## 二、阶段执行通用流程
+## 一、阶段执行通用流程
 
 每个阶段必须按以下顺序执行，**跳过任何一步都无法进入下一阶段**：
 
@@ -72,6 +39,7 @@ else:
                    ↓
 ┌─────────────────────────────────────────┐
 │ Step 5: 检查点验证（Checkpoint）          │ ← 强制阻断
+│  - 调用 run-checks.ps1 校验阶段转换合法性  │
 │  - 验证产物完整性                          │
 │  - 验证格式正确性                          │
 │  - 验证可执行性（如任务列表）               │
@@ -98,80 +66,41 @@ else:
 
 ---
 
-## 三、状态机与流程
+## 二、核心流程与场景映射
 
-### 3.1 基础状态机
+### 2.1 7 个核心流程
 
-```
-START → ANALYZE → CONFIRM → DESIGN → IMPLEMENT → VERIFY → JUDGE
-              ↑        │                      ↓
-              └────────┘      ┌─────────────────┼─────────────────┐
-              (修改)          ↓                 ↓                 ↓
-                           ✅ DONE           🔧 DESIGN          🔄 IMPLEMENT
-                                           (修复模式)          (重试模式)
+| # | 流程 | 适用场景 | 执行路径 | 特殊说明 |
+|:-:|------|----------|----------|----------|
+| 1 | 完整项目流程 | 新项目启动，从需求到验收 | 完整7阶段 | 完整执行所有阶段 |
+| 2 | 需求迭代流程 | 已有项目的需求更新 | 完整7阶段 | ANALYZE 关注变更影响范围 |
+| 3 | 设计评审流程 | 架构设计、接口定义评审 | 跳过 IMPLEMENT | VERIFY 只验证设计文档质量 |
+| 4 | 代码开发流程 | 代码实现、Bug 修复、功能开发 | 完整7阶段 | ANALYZE/DESIGN 可简化 |
+| 5 | 测试优化流程 | 测试策略、用例设计、覆盖提升 | 完整7阶段 | IMPLEMENT 只写测试代码 |
+| 6 | 文档完善流程 | 技术文档、API 文档补充 | 跳过 DESIGN | IMPLEMENT 编写文档 |
+| 7 | 架构重构流程 | 架构优化、技术债务清理 | 完整7阶段 | DESIGN 重点输出重构计划 |
 
-CONFIRM 分支:
-- ✅ 确认 → DESIGN
-- ✏️  修改 → ANALYZE
-- ❌ 取消 → ABORT
+### 2.2 7 流程 ↔ 3 场景映射
 
-终止状态: DONE, ABORT, FAILED
-```
+在 SKILL.chunks 中定义了 **三大场景（开发/分析/修复）** 的分步引导。以下映射表帮助你将 7 个流程对接到对应的 chunk 场景：
 
-### 3.2 7 个核心流程的差异化执行路径
+| 流程 | 对应 chunk 场景 | 引导参考 |
+|:----|:---------------|----------|
+| 完整项目流程 | 开发场景 | [SKILL.chunks/chunk-02-flows.md](SKILL.chunks/chunk-02-flows.md) → 流程1（开发） |
+| 需求迭代流程 | 开发场景 | chunk-02-flows.md → 流程1（开发） |
+| 设计评审流程 | 分析场景 | chunk-02-flows.md → 流程2（分析） |
+| 代码开发流程 | 开发场景 | chunk-02-flows.md → 流程1（开发） |
+| 测试优化流程 | 开发/分析场景 | chunk-02-flows.md → 流程1+流程2 |
+| 文档完善流程 | 开发场景 | chunk-02-flows.md → 流程1（开发），输出阶段参考 |
+| 架构重构流程 | 修复场景 | chunk-02-flows.md → 流程3（修复） |
 
-#### 流程 1: 完整项目流程
-**适用场景**：新项目启动，从需求到验收的全流程。
-**执行路径**：`START → ANALYZE → CONFIRM → DESIGN → IMPLEMENT → VERIFY → JUDGE → DONE`
-**说明**：完整执行所有阶段。
-
-#### 流程 2: 需求迭代流程
-**适用场景**：已有项目的需求更新和迭代。
-**执行路径**：`START → ANALYZE → CONFIRM → DESIGN → IMPLEMENT → VERIFY → JUDGE → DONE`
-**说明**：完整执行所有阶段，但 ANALYZE 阶段重点关注变更影响范围。
-
-#### 流程 3: 设计评审流程
-**适用场景**：架构设计、接口定义、数据库设计的评审。
-**执行路径**：`START → ANALYZE → CONFIRM → DESIGN → VERIFY → JUDGE → DONE`
-**说明**：跳过 IMPLEMENT 阶段，VERIFY 阶段只验证设计文档质量。
-
-#### 流程 4: 代码开发流程
-**适用场景**：代码实现、Bug 修复、功能开发。
-**执行路径**：`START → ANALYZE → CONFIRM → DESIGN → IMPLEMENT → VERIFY → JUDGE → DONE`
-**说明**：ANALYZE 阶段可简化，DESIGN 阶段可简化为任务列表。
-
-#### 流程 5: 测试优化流程
-**适用场景**：测试策略制定、用例设计、覆盖提升。
-**执行路径**：`START → ANALYZE → CONFIRM → DESIGN → IMPLEMENT → VERIFY → JUDGE → DONE`
-**说明**：IMPLEMENT 阶段只编写测试代码，VERIFY 阶段验证测试有效性。
-
-#### 流程 6: 文档完善流程
-**适用场景**：技术文档、API 文档的补充。
-**执行路径**：`START → ANALYZE → CONFIRM → IMPLEMENT → VERIFY → JUDGE → DONE`
-**说明**：跳过 DESIGN 阶段，IMPLEMENT 阶段编写文档，VERIFY 阶段验证文档质量。
-
-#### 流程 7: 架构重构流程
-**适用场景**：架构优化、技术债务清理。
-**执行路径**：`START → ANALYZE → CONFIRM → DESIGN → IMPLEMENT → VERIFY → JUDGE → DONE`
-**说明**：DESIGN 阶段重点输出重构计划，VERIFY 阶段增加回归测试。
-
-### 3.3 流程选择速查
-
-| 流程 | 跳过阶段 | 特殊说明 |
-|------|----------|----------|
-| 完整项目 | 无 | 完整执行 |
-| 需求迭代 | 无 | 关注变更影响 |
-| 设计评审 | IMPLEMENT | 只验证设计 |
-| 代码开发 | 无 | ANALYZE 可简化 |
-| 测试优化 | 无 | 只编写测试 |
-| 文档完善 | DESIGN | 只编写文档 |
-| 架构重构 | 无 | 增加回归测试 |
+**使用方式**：确定当前属于哪个流程后，查阅对应 chunk 场景的分步引导获取更细化的执行指引。
 
 ---
 
-## 四、阶段详解（含强制检查点）
+## 三、阶段详解（含强制检查点）
 
-### 4.1 START 阶段
+### 3.1 START 阶段
 
 **入口**：用户首次触发 ReqPlan-v3
 
@@ -184,33 +113,35 @@ CONFIRM 分支:
 2. [ ] 如果不存在，创建目录和接力棒
    mkdir -p {项目路径}/.agent/harness/
    write {项目路径}/.agent/harness/_baton.md
+   （状态保持 START，不提前修改）
 
 3. [ ] 提取用户需求
    - 识别场景类型（开发/分析/修复）
    - 确认项目路径
 
-4. [ ] 更新接力棒
-   - 状态: START → ANALYZE
-   - 记录: 用户需求摘要
-
-5. [ ] 自检清单
+4. [ ] 自检清单
    - [ ] 接力棒已创建/已读取
    - [ ] 用户需求已记录
    - [ ] 场景类型已识别
 
-6. [ ] 检查点验证
+5. [ ] 检查点验证 — 调用 run-checks 校验阶段转换
+   - [ ] 调用 scripts/harness/run-checks.ps1 -ProjectPath {项目路径} -Stage ANALYZE
    - [ ] 接力棒文件存在
    - [ ] 接力棒包含状态字段
-   - [ ] 状态为 ANALYZE
+   【此时 baton 状态为 START，run-checks 校验 START→ANALYZE 合法性】
+   【未通过 → 阻断 → 必须修复】
 
-7. [ ] 更新接力棒（标记 START 完成）
+6. [ ] 更新接力棒
+   - 状态: START → ANALYZE
+   - 记录: 用户需求摘要
+   - 标记: START ✅
 
-8. [ ] 进入 ANALYZE 阶段
+7. [ ] 进入 ANALYZE 阶段
 ```
 
 ---
 
-### 4.2 ANALYZE 阶段
+### 3.2 ANALYZE 阶段
 
 **入口**：START 完成 或 CONFIRM 用户选择修改
 
@@ -246,11 +177,13 @@ CONFIRM 分支:
    - [ ] 产物文件存在
    - [ ] 格式符合模板
    - [ ] 内容完整（所有必需章节）
+   - [ ] 调用 scripts/harness/run-checks.ps1 -ProjectPath {项目路径} -Stage CONFIRM
+   【此时 baton 状态为 ANALYZE，校验 ANALYZE→CONFIRM 合法性】
 
    **未通过 → 输出错误："ANALYZE 产物不完整，缺少：[具体项]" → 必须修复**
 
 5. [ ] 更新接力棒
-   - 状态: ANALYZE ✅
+   - 状态: ANALYZE ✅ → CONFIRM
    - 下一步: CONFIRM
 
 6. [ ] 进入 CONFIRM 阶段
@@ -258,7 +191,7 @@ CONFIRM 分支:
 
 ---
 
-### 4.3 CONFIRM 阶段
+### 3.3 CONFIRM 阶段
 
 **入口**：ANALYZE 完成
 
@@ -279,29 +212,52 @@ CONFIRM 分支:
    命令：read {项目路径}/.agent/harness/_analysis.md
 
 2. [ ] 展示摘要（必须包含以下内容）
-   ========================================
-   📋 需求确认摘要
-   ========================================
    
-   🎯 核心功能：
-   - {功能1}
-   - {功能2}
+   ---
    
-   🛠️ 技术栈：{技术栈}
+   ## 📋 需求分析摘要
    
-   📁 涉及文件：
-   - {文件1}
-   - {文件2}
+   > 请花 1 分钟确认需求理解是否正确。
    
-   ⚠️ 关键约束：
+   ### 核心功能
+   
+   | # | 功能点 | 优先级 | 说明 |
+   |---|--------|--------|------|
+   | 1 | {功能1} | P0 | {说明} |
+   | 2 | {功能2} | P1 | {说明} |
+   | 3 | {功能3} | P2 | {说明} |
+   
+   ### 技术栈
+   
+   - 后端：{技术栈}
+   - 前端：{技术栈}
+   - 数据库：{数据库}
+   - 其他：{其他依赖}
+   
+   ### 涉及文件
+   
+   - `{文件1}`
+   - `{文件2}`
+   - `{文件3}`
+   
+   ### 关键约束
+   
    - {约束1}
+   - {约束2}
    
-   ========================================
-   请确认以上理解是否正确？
-   回复【确认】继续进入设计阶段
-   回复【修改】返回分析阶段调整需求
-   回复【取消】终止本次任务
-   ========================================
+   ---
+   
+   ### ⚠️ 请确认
+   
+   **需求理解是否正确？**
+   
+   - ✅ **确认（继续设计）**：开始设计技术方案
+   - ✏️  **修改需求**：描述需要修改的内容，我会重新分析
+   - ❌  **取消**：终止 ReqPlan 流程
+   
+   ---
+   
+   *确认后，我将进入设计阶段，制定详细的技术方案。*
 
 3. [ ] 强制等待用户响应
    ⚠️ 阻断规则：在没有收到用户明确回复前，禁止执行任何其他操作
@@ -315,17 +271,22 @@ CONFIRM 分支:
    **如果用户选择"取消" → 状态设为 ABORT → 输出终止报告 → 流程结束**
    **如果用户未明确确认 → 阻断 → 重复步骤 2-3（再次展示摘要并等待）**
 
-5. [ ] 更新接力棒
+5. [ ] 检查点验证 — 调用 run-checks 校验阶段转换
+   - [ ] 调用 scripts/harness/run-checks.ps1 -ProjectPath {项目路径} -Stage DESIGN
+   【此时 baton 状态为 CONFIRM，校验 CONFIRM→DESIGN 合法性】
+   **未通过 → 阻断 → 检查流程状态**
+
+6. [ ] 更新接力棒
    命令：read {项目路径}/.agent/harness/_baton.md
-   修改：状态 CONFIRM ✅
+   修改：状态 CONFIRM ✅ → DESIGN
    命令：write {项目路径}/.agent/harness/_baton.md
 
-6. [ ] 进入 DESIGN 阶段
+7. [ ] 进入 DESIGN 阶段
 ```
 
 ---
 
-### 4.4 DESIGN 阶段
+### 3.4 DESIGN 阶段
 
 **入口**：CONFIRM 用户确认 或 JUDGE 判定 DESIGN_FIX
 
@@ -367,11 +328,13 @@ CONFIRM 分支:
    - [ ] 产物文件存在
    - [ ] 格式符合模板
    - [ ] 任务列表可执行（有涉及文件和验证方式）
+   - [ ] 调用 scripts/harness/run-checks.ps1 -ProjectPath {项目路径} -Stage IMPLEMENT
+   【此时 baton 状态为 DESIGN，校验 DESIGN→IMPLEMENT 合法性】
 
    **未通过 → 输出错误："DESIGN 产物不完整或不可执行" → 必须修复**
 
 6. [ ] 更新接力棒
-   - 状态: DESIGN ✅
+   - 状态: DESIGN ✅ → IMPLEMENT
    - 下一步: IMPLEMENT
 
 7. [ ] 进入 IMPLEMENT 阶段
@@ -379,7 +342,7 @@ CONFIRM 分支:
 
 ---
 
-### 4.5 IMPLEMENT 阶段
+### 3.5 IMPLEMENT 阶段
 
 **入口**：DESIGN 完成 或 JUDGE 判定 REVIEW_FIX/RETRY_FIX
 
@@ -416,11 +379,13 @@ CONFIRM 分支:
 5. [ ] 检查点验证（阻断点）
    - [ ] 产物文件存在
    - [ ] 代码已保存到文件
+   - [ ] 调用 scripts/harness/run-checks.ps1 -ProjectPath {项目路径} -Stage VERIFY
+   【此时 baton 状态为 IMPLEMENT，校验 IMPLEMENT→VERIFY 合法性】
 
    **未通过 → 输出错误："代码必须保存到文件后才能进入验证" → 必须修复**
 
 6. [ ] 更新接力棒
-   - 状态: IMPLEMENT ✅
+   - 状态: IMPLEMENT ✅ → VERIFY
    - 下一步: VERIFY
 
 7. [ ] 进入 VERIFY 阶段
@@ -428,7 +393,7 @@ CONFIRM 分支:
 
 ---
 
-### 4.6 VERIFY 阶段
+### 3.6 VERIFY 阶段
 
 **入口**：IMPLEMENT 完成
 
@@ -470,11 +435,13 @@ CONFIRM 分支:
    - [ ] 产物文件存在
    - [ ] 判定结果明确（PASS/FAIL）
    - [ ] 如果 FAIL，错误分类明确
+   - [ ] 调用 scripts/harness/run-checks.ps1 -ProjectPath {项目路径} -Stage JUDGE
+   【此时 baton 状态为 VERIFY，校验 VERIFY→JUDGE 合法性】
 
    **未通过 → 输出错误："VERIFY 必须给出明确的 PASS/FAIL 判定" → 必须修复**
 
 6. [ ] 更新接力棒
-   - 状态: VERIFY ✅
+   - 状态: VERIFY ✅ → JUDGE
    - 下一步: JUDGE
 
 7. [ ] 进入 JUDGE 阶段
@@ -482,7 +449,7 @@ CONFIRM 分支:
 
 ---
 
-### 4.7 JUDGE 阶段
+### 3.7 JUDGE 阶段
 
 **入口**：VERIFY 完成
 
@@ -504,23 +471,31 @@ CONFIRM 分支:
 3. [ ] 决策（检查点验证）
 
    如果 PASS ✅:
-     - [ ] 更新接力棒: 状态 DONE ✅
+     - [ ] 调用 run-checks.ps1 -ProjectPath {项目路径} -Stage DONE
+     【此时 baton 状态为 JUDGE，校验 JUDGE→DONE 合法性】
+     - [ ] 更新接力棒: 状态 JUDGE ✅ → DONE
      - [ ] 输出完成报告
      - [ ] 流程结束
 
    如果 ARCHITECTURE_VIOLATION 🔧:
      - [ ] 检查 design_fix_retry < 2
-     - [ ] 更新接力棒: 状态 DESIGN, 模式 DESIGN_FIX, design_fix_retry += 1
+     - [ ] 调用 run-checks.ps1 -ProjectPath {项目路径} -Stage DESIGN
+     【此时 baton 状态为 JUDGE，校验 JUDGE→DESIGN 合法性】
+     - [ ] 更新接力棒: 状态 JUDGE ✅, 模式 DESIGN_FIX, design_fix_retry += 1
      - [ ] 进入 DESIGN 阶段（修复模式）
      - [ ] 如果 design_fix_retry >= 2 → 状态 FAILED → 流程结束
 
    如果 REVIEW_VIOLATION 🔧:
-     - [ ] 更新接力棒: 状态 IMPLEMENT, 模式 REVIEW_FIX
+     - [ ] 调用 run-checks.ps1 -ProjectPath {项目路径} -Stage IMPLEMENT
+     【此时 baton 状态为 JUDGE，校验 JUDGE→IMPLEMENT 合法性】
+     - [ ] 更新接力棒: 状态 JUDGE ✅, 模式 REVIEW_FIX
      - [ ] 进入 IMPLEMENT 阶段（修复模式）
 
    如果 RUNTIME_FAILURE 🔄:
      - [ ] 检查 retry < 2
-     - [ ] 更新接力棒: 状态 IMPLEMENT, 模式 RETRY_FIX, retry += 1
+     - [ ] 调用 run-checks.ps1 -ProjectPath {项目路径} -Stage IMPLEMENT
+     【此时 baton 状态为 JUDGE，校验 JUDGE→IMPLEMENT 合法性】
+     - [ ] 更新接力棒: 状态 JUDGE ✅, 模式 RETRY_FIX, retry += 1
      - [ ] 进入 IMPLEMENT 阶段（重试模式）
      - [ ] 如果 retry >= 2 → 状态 FAILED → 流程结束
 
@@ -532,149 +507,7 @@ CONFIRM 分支:
 
 ---
 
-## 五、防跳跃机制
-
-### 5.1 阶段跳跃阻断表
-
-| 当前状态 | 允许进入 | 禁止进入 |
-|----------|----------|----------|
-| START | ANALYZE | 其他所有 |
-| ANALYZE | CONFIRM | DESIGN, IMPLEMENT, VERIFY, JUDGE |
-| CONFIRM | DESIGN, ANALYZE(修改), ABORT(取消) | IMPLEMENT, VERIFY, JUDGE |
-| DESIGN | IMPLEMENT | VERIFY, JUDGE |
-| IMPLEMENT | VERIFY | JUDGE |
-| VERIFY | JUDGE | 其他所有 |
-| JUDGE | DONE, DESIGN(修复), IMPLEMENT(修复/重试), FAILED | 其他所有 |
-
-### 5.2 跳跃阻断输出模板
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║  ❌ 阶段跳跃阻断                                              ║
-╠══════════════════════════════════════════════════════════════╣
-║  当前状态: [当前状态]                                         ║
-║  目标状态: [目标状态]                                         ║
-║                                                              ║
-║  正确路径:                                                   ║
-║  [当前状态] → [正确下一状态] → ... → [目标状态]              ║
-║                                                              ║
-║  请按正确路径执行。                                           ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
----
-
-## 六、产物检查清单
-
-### 6.1 _analysis.md 必须包含
-
-```markdown
-- [ ] # 需求分析报告（标题）
-- [ ] ## 基本信息（时间、分析者、场景类型）
-- [ ] ## 需求理解（核心功能、涉及角色、数据实体）
-- [ ] ## 技术栈
-- [ ] ## 涉及文件
-- [ ] ## 约束条件
-- [ ] ## 可复用资源
-```
-
-### 6.2 _design.md 必须包含
-
-```markdown
-- [ ] # 技术设计文档（标题）
-- [ ] ## 技术方案概述
-- [ ] ## 模块划分
-- [ ] ## 接口定义（REST API）
-- [ ] ## 数据模型
-- [ ] ## 任务列表（带依赖，每个任务有涉及文件和验证方式）
-- [ ] ## 验证方案（Layer 1-5）
-```
-
-### 6.3 _implementation.md 必须包含
-
-```markdown
-- [ ] # 实现摘要（标题）
-- [ ] ## 基本信息（时间、实现者、模式）
-- [ ] ## 完成的任务
-- [ ] ## 涉及的文件（新增/修改）
-- [ ] ## 问题记录
-```
-
-### 6.4 _verification.md 必须包含
-
-```markdown
-- [ ] # 验证报告（标题）
-- [ ] ## Layer 1: 静态检查
-- [ ] ## Layer 2: 单元测试
-- [ ] ## Layer 3: 构建集成
-- [ ] ## Layer 4: 异常处理
-- [ ] ## Layer 5: 流程合规
-- [ ] ## 综合判定: PASS / FAIL（必须明确）
-- [ ] ## 错误分类（如果 FAIL）
-```
-
----
-
-## 七、接力棒更新模板
-
-### 7.1 强制更新内容
-
-每个阶段结束后，必须包含以下字段：
-
-```markdown
-# 🔄 ReqPlan-v3 接力棒
-
-## 元信息
-| 字段 | 值 |
-|------|-----|
-| 项目 | {项目名称} |
-| 开始时间 | {ISO 8601} |
-| 最后更新 | {ISO 8601} |
-| 当前状态 | {START/ANALYZE/CONFIRM/DESIGN/IMPLEMENT/VERIFY/JUDGE/DONE/ABORT/FAILED} |
-| 模式 | {NORMAL/DESIGN_FIX/REVIEW_FIX/RETRY_FIX} |
-| 重试计数 | {0/1/2} |
-| design_fix_retry | {0/1/2} |
-
-## 进度追踪
-- [x] START - {时间} ✅
-- [x] ANALYZE - {时间} ✅
-- [x] CONFIRM - {时间} ✅
-- [ ] DESIGN - 进行中 ⏳
-- [ ] IMPLEMENT - 待开始
-- [ ] VERIFY - 待开始
-- [ ] JUDGE - 待开始
-
-## 产物清单
-- [x] `.agent/harness/_analysis.md` ✅
-- [x] `.agent/harness/_design.md` ✅
-- [ ] `.agent/harness/_implementation.md` ⏳
-- [ ] `.agent/harness/_verification.md` ⏳
-
-## 当前阶段详情
-### {状态名称}（进行中）
-**进度**: {百分比}%
-**已完成**: {列表}
-**进行中**: {任务}
-**待完成**: {列表}
-
-## 问题记录
-### ⚠️ 阻塞问题
-{问题列表}
-
-### 💡 待确认事项
-{待确认事项}
-
-## 下一步行动
-1. {具体任务1}
-2. {具体任务2}
-
----
-*最后更新: {ISO 8601}*
-```
-
----
-
-## 八、文件路径速查
+## 四、文件路径速查
 
 ```bash
 # Skill 根目录
@@ -692,6 +525,13 @@ protocols/phase-protocol.md
 
 # 产物模板
 artifacts/template-artifacts.md
+
+# 分块加载
+SKILL.chunks/chunk-index.yaml
+SKILL.chunks/chunk-01-guide.md
+SKILL.chunks/chunk-02-flows.md
+SKILL.chunks/chunk-03-harness.md
+SKILL.chunks/chunk-04-chain.md
 ```
 
 ```bash
@@ -708,54 +548,6 @@ artifacts/template-artifacts.md
 
 ---
 
-## 九、常见问题
-
-### 9.1 接力棒不存在
-
-```markdown
-情况：首次触发
-
-解决方案：
-1. 创建目录
-2. 创建接力棒（状态=START）
-3. 继续 START → ANALYZE
-```
-
-### 9.2 产物丢失
-
-```markdown
-情况：接力棒显示存在，但文件不存在
-
-解决方案：
-1. 识别缺失的产物
-2. 重新生成
-3. 更新接力棒
-```
-
-### 9.3 用户中断
-
-```markdown
-情况：用户突然停止
-
-解决方案：
-1. 立即更新接力棒
-2. 记录当前进度
-3. 提示续跑方式
-```
-
-### 9.4 AI 忘记当前状态
-
-```markdown
-情况：AI 不知道自己在哪个阶段
-
-解决方案：
-1. 强制读取接力棒
-2. 按接力棒状态执行
-3. 如果接力棒损坏 → 重新初始化
-```
-
----
-
-*本文档是 ReqPlan-v3 的核心执行手册*
+*本文档是 ReqPlan-v3 的阶段执行手册*
 *版本: v4.1*
-*更新: 2026-05-20*
+*更新: 2026-05-21*

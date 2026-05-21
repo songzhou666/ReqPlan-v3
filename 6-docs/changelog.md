@@ -1,5 +1,66 @@
 # ReqPlan 变更日志
 
+## v4.2 (2026-05-21)
+
+### 路径体系统一（P0）
+
+**统一三套路径为一套**
+- chunk-02-flows.md：init 流程从创建 AGENTS.md + `.agent/plans/` 改为创建 `.agent/harness/_baton.md` + `docs/harness/history.yaml`
+- chunk-02-flows.md：Step 产出路径从 `.agent/plans/` / `.agent/requirements/` / `.agent/plans/{date}-{fix}.md` 统一为 `.agent/harness/_*.md`
+- chunk-02-flows.md：会话恢复从读取 `.agent/plans/` 改为读取 `.agent/harness/_baton.md`
+- chunk-04-chain.md：新增"两层路径模型"章节，明确 `.agent/harness/`（运行时）与 `docs/harness/`（归档）的职责分工
+- skill-manifest.yaml：废弃 `docs/reqplan/` 和 `9-data/` 未激活路径，替换为 `runtime_state` + `long_term_archive`
+
+### SKILL.md 精简（P1）
+
+**543 行 → ~183 行（精简 66%）**
+- 删除重复的状态路由表（L102-113 与 L141-152 重复）
+- 将详细检查点清单、接力棒模板等优化为精简引用，细节委托至 SKILL-execution.md
+- 简化入口检查为简练的 2 步流程
+
+### 冗余清理（P1）
+
+**文件删除**：
+- 删除 `6-docs/quick-reference.md`（空壳占位："已移除"）
+- 删除 `6-docs/adoption-guide.md`（空壳占位："已移动"）
+- 删除 `6-docs/troubleshooting.md`（空壳占位："已移动"）
+
+**文档修正**：
+- legacy/README.md：修正与实际代码的矛盾描述，更新归档内容表和 v4.1 变更说明
+
+### 过时引用清理（P2）
+
+- debug-guide.md：移除 `INIT → START` 过时状态转移，更新产物契约表，替换 `.agent/plans/` 引用为 `.agent/harness/`
+- scripts/harness/README.md：标注 9 个 PowerShell 脚本的 v4.1 兼容性状态（3 个兼容 + 6 个 v3.3 遗留）
+- chunk-01-guide.md：补充 `/reqplan guide` 命令行为定义和执行步骤
+
+### 版本一致性
+
+- SKILL.md frontmatter: `4.1` → `4.2`
+- SKILL.md body: `v4.1 (强制检查点版)` → `v4.2 (路径统一版)`
+- skill-manifest.yaml: `4.1` → `4.2`
+- README.md: 版本号同步
+
+---
+
+## v4.1 (2026-05-21)
+
+### 强制检查点版
+
+**核心机制**：
+- 增加强制检查点机制（Checkpoint）
+- 增加阶段跳跃阻断
+- 增加产物缺失阻断
+- 增加状态自检清单
+- 增加防遗忘机制
+- 优化自然语义触发词库
+- 目录结构整合（消除v3.3/v4.1冗余）
+- 产物模板统一为 artifacts/template-artifacts.md（唯一源）
+- 激活 SKILL.chunks 分块加载
+- 废弃 _manifest.md 5合1模式，保留独立文件产物模式
+
+---
+
 ## v3.4 (2026-05-14)
 
 ### 一致性修复

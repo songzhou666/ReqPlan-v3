@@ -1,4 +1,4 @@
-# ReqPlan-v3 (v4.0) — Harness Engineering + 接力棒持久化
+# ReqPlan-v3 (v4.2) — Harness Engineering + 接力棒持久化
 
 > 基于 Harness Engineering 理念 + 接力棒持久化机制的项目全生命周期管理引擎
 
@@ -130,19 +130,25 @@ START → ANALYZE → CONFIRM → DESIGN → IMPLEMENT → VERIFY → JUDGE
 ## 目录结构
 
 ```
-ReqPlan-v3-v4/
+ReqPlan-v3/
 ├── SKILL.md                  # 技能入口
 ├── SKILL-execution.md        # 核心执行指南
-├── README.md                # 本文件
-├── agents/                  # Agent 定义
-│   ├── analyzer-agent.md    # 分析 Agent
-│   ├── designer-agent.md    # 设计 Agent
-│   ├── implementer-agent.md # 实现 Agent
-│   └── verifier-agent.md    # 验证 Agent
-├── protocols/               # 协议文档
-│   └── baton-protocol.md   # 接力棒协议
-└── artifacts/               # 产物模板
-    └── template-artifacts.md # 产物模板
+├── README.md                 # 本文件
+├── agents/                   # Agent 定义
+│   ├── analyzer-agent.md     # 分析 Agent
+│   ├── designer-agent.md     # 设计 Agent
+│   ├── implementer-agent.md  # 实现 Agent
+│   └── verifier-agent.md     # 验证 Agent
+├── protocols/                # 协议文档
+│   ├── baton-protocol.md     # 接力棒协议
+│   └── phase-protocol.md     # 阶段执行规范
+├── artifacts/                # 产物模板（唯一来源）
+│   └── template-artifacts.md # 产物模板集合
+├── SKILL.chunks/             # 分块加载（按需激活）
+├── legacy/                   # v3.3 历史归档
+├── scripts/harness/          # 校验脚本
+├── reference/                # 参考文档
+└── 6-docs/changelog.md       # 版本日志
 ```
 
 ---
@@ -167,14 +173,27 @@ ReqPlan-v3-v4/
 
 ## 版本信息
 
-**版本**: v4.1 (强制检查点版)
-**更新日期**: 2026-05-20
+**版本**: v4.2 (路径统一版)
+**更新日期**: 2026-05-21
 
 **融合内容**：
 - ReqPlan-v3 原始仓库 (v3.3) 的 7 个核心流程
 - Harness Engineering 多 Agent 协作
 - 接力棒持久化机制
 - 5 层验证体系
+- 独立文件产物模式（_analysis.md / _design.md / _implementation.md / _verification.md）
+
+**最新变更 (v4.2, 2026-05-21)**：
+- 三套路径体系统一为 `.agent/harness/`（运行时）+ `docs/harness/`（归档）
+- SKILL.md 从 543 行精简至 ~183 行
+- 删除重复状态路由表，清理 3 个空壳占位文件
+- 修正 legacy/README 矛盾描述，清理 debug-guide 过时引用
+- 标注 PowerShell 脚本兼容性，补充 /reqplan guide 命令行为定义
+
+**v4.1 变更 (2026-05-21)**：
+- 废弃 _manifest.md 5合1模式，保留独立文件产物模式
+- 清理 3-core / 4-schemas / 5-templates / 7-flows 无效占位文件
+- 统一版本号至 v4.1
 
 **基于**：
 - ReqPlan-v3 原始仓库

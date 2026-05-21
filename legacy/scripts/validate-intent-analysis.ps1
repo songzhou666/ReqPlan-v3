@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   验证意图分析产出物是否符合接口规范
 .DESCRIPTION
@@ -8,6 +8,7 @@
   - dataFlow: 数据流程描述
   - summary: 意图摘要
   对应 Action: action_intent_analyze 的后置校验。
+  注意：本脚本检查的是 v3.3 格式，v4.x 已改用 .agent/harness/_analysis.md
 .PARAMETER Path
   意图分析结果文件路径。默认搜索 .trae/reqplan/ 下最新的 intent-*.yaml 或 state.yaml。
 .EXAMPLE
@@ -26,7 +27,7 @@ $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $failCount = 0
 $warnCount = 0
 
-Write-Host "=== 意图分析结果校验 ==="
+Write-Host "=== 意图分析结果校验 (v3.3 遗留) ==="
 Write-Host ""
 
 # 确定目标文件
