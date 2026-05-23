@@ -1,6 +1,6 @@
 ---
 name: reqplan-v3
-version: 4.6
+version: 4.9
 author: songzhou
 description: |
   项目全生命周期管理引擎。用于系统化、流程化地执行软件工程任务。
