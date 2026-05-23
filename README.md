@@ -1,4 +1,4 @@
-# ReqPlan-v3 (v4.2) — Harness Engineering + 接力棒持久化
+# ReqPlan-v3 (v4.6) — Harness Engineering + 接力棒持久化
 
 > 基于 Harness Engineering 理念 + 接力棒持久化机制的项目全生命周期管理引擎
 
@@ -60,6 +60,7 @@
 | 5 | 测试优化流程 | 测试策略制定、用例设计、覆盖提升 |
 | 6 | 文档完善流程 | 技术文档、API 文档的补充 |
 | 7 | 架构重构流程 | 架构优化、技术债务清理 |
+| 8 | 自绑定审查流程 | 审查/修复 Skill 自身 |
 
 ---
 
@@ -106,11 +107,16 @@ START → ANALYZE → CONFIRM → DESIGN → IMPLEMENT → VERIFY → JUDGE
 {项目路径}/
 └── .agent/
     └── harness/
-        ├── _baton.md          # 接力棒
-        ├── _analysis.md       # 分析产物
-        ├── _design.md         # 设计产物
-        ├── _implementation.md # 实现摘要
-        └── _verification.md   # 验证产物
+        ├── _baton.md                     # 接力棒
+        ├── _analysis.md                  # 分析产物
+        ├── _design.md                    # 设计产物
+        ├── _implementation.md            # 实现摘要
+        ├── _verification.md              # 验证产物
+        ├── _quality_audit_analysis.md    # 分析质量审核报告
+        ├── _quality_audit_design.md      # 设计质量审核报告
+        ├── _quality_audit_implement.md   # 实现质量审核报告
+        ├── _quality_audit_verify.md      # 验证质量审核报告
+        └── _quality_audit_judge.md       # 最终全局判定报告
 ```
 
 ---
@@ -138,15 +144,16 @@ ReqPlan-v3/
 │   ├── analyzer-agent.md     # 分析 Agent
 │   ├── designer-agent.md     # 设计 Agent
 │   ├── implementer-agent.md  # 实现 Agent
-│   └── verifier-agent.md     # 验证 Agent
+│   ├── verifier-agent.md     # 验证 Agent
+│   └── quality-auditor-agent.md # 质量审核 Agent [新增]
+├── quality-control/          # 质量体系 [新增]
+│   └── 00-quality-system.md  # 质量审核体系定义
 ├── protocols/                # 协议文档
-│   ├── baton-protocol.md     # 接力棒协议
-│   └── phase-protocol.md     # 阶段执行规范
+│   └── baton-protocol.md     # 接力棒协议
 ├── artifacts/                # 产物模板（唯一来源）
 │   └── template-artifacts.md # 产物模板集合
 ├── SKILL.chunks/             # 分块加载（按需激活）
 ├── legacy/                   # v3.3 历史归档
-├── scripts/harness/          # 校验脚本
 ├── reference/                # 参考文档
 └── 6-docs/changelog.md       # 版本日志
 ```
@@ -173,8 +180,8 @@ ReqPlan-v3/
 
 ## 版本信息
 
-**版本**: v4.2 (路径统一版)
-**更新日期**: 2026-05-21
+**版本**: v4.6 (代入式演练修复版)
+**更新日期**: 2026-05-24
 
 **融合内容**：
 - ReqPlan-v3 原始仓库 (v3.3) 的 7 个核心流程
@@ -183,12 +190,10 @@ ReqPlan-v3/
 - 5 层验证体系
 - 独立文件产物模式（_analysis.md / _design.md / _implementation.md / _verification.md）
 
-**最新变更 (v4.2, 2026-05-21)**：
-- 三套路径体系统一为 `.agent/harness/`（运行时）+ `docs/harness/`（归档）
-- SKILL.md 从 543 行精简至 ~183 行
-- 删除重复状态路由表，清理 3 个空壳占位文件
-- 修正 legacy/README 矛盾描述，清理 debug-guide 过时引用
-- 标注 PowerShell 脚本兼容性，补充 /reqplan guide 命令行为定义
+**最新变更 (v4.6, 2026-05-24)**：
+- 代入式演练修复：消除自检清单三体问题、统一质量审核与检查点顺序、扩充 IMPLEMENT 自检清单
+- 生成质量审核修复版：统一版本号、补全 VERIFY 前置检查、精简通用流程
+- 强制执行版：激活即执行、AI 不得清单、验证链规则、条件性跳过
 
 **v4.1 变更 (2026-05-21)**：
 - 废弃 _manifest.md 5合1模式，保留独立文件产物模式

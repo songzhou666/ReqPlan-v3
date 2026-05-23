@@ -4,10 +4,10 @@
 skill:
   id: "ReqPlan-v3"
   name: "ReqPlan-v3 软件开发引导专家"
-  version: "4.2"
+  version: "4.6"
   author: "songzhou"
   created_at: "2026-05-15"
-  updated_at: "2026-05-21"
+  updated_at: "2026-05-24"
 
   # Skill分类与标签
   category: "development"
@@ -19,6 +19,7 @@ skill:
     - "code-review"
     - "architecture"
     - "task-planning"
+    - "quality-audit"
 
   # 能力声明
   capabilities:
@@ -30,6 +31,7 @@ skill:
     - "沉淀可追溯的开发链路记录"
     - "Bug排查与修复流程"
     - "代码审查与架构分析"
+    - "独立质量审核与盲审评分"
 
   # 适配场景
   scenarios:
@@ -103,6 +105,11 @@ skill:
         - "_design.md"
         - "_implementation.md"
         - "_verification.md"
+        - "_quality_audit_analysis.md"
+        - "_quality_audit_design.md"
+        - "_quality_audit_implement.md"
+        - "_quality_audit_verify.md"
+        - "_quality_audit_judge.md"
     long_term_archive:
       root: "docs/harness/"
       description: "长期归档（跨任务持久化，建议提交到Git仓库）"

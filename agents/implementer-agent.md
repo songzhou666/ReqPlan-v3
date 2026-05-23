@@ -12,7 +12,7 @@
 - [ ] 1. 接力棒已读取，当前状态为 IMPLEMENT
 - [ ] 2. _design.md 存在且完整
 - [ ] 3. 任务列表明确（有涉及文件和验证方式）
-- [ ] 4. 前置 DESIGN 阶段已通过 run-checks 校验（进入 IMPLEMENT）
+- [ ] 4. 前置 DESIGN 阶段已完成且质量审核已通过（进入 IMPLEMENT）
 
 **如果任一未满足 → 停止执行 → 返回总控处理**
 ```
@@ -216,9 +216,3 @@ def create_user():
 2. 尝试解决方案
 3. 如果无法解决，报告给总控
 ```
-
----
-
-*本文档是 ReqPlan-v3 Harness 系统的 Implementer Agent 定义*
-*版本: 4.1*
-*更新时间: 2026-05-20*

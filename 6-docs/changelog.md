@@ -1,5 +1,125 @@
 # ReqPlan 变更日志
 
+## v4.9 (2026-05-23)
+### 中断处理机制版
+
+**新增**：
+- **用户中断处理机制（全阶段适用）**：当用户在状态机执行过程中提出额外需求/问题/调整要求时，AI 暂停当前操作并提供 3 个选项供用户选择（立即重置/记入 TODO/仅讨论），详见 SKILL.md 第4节
+- 覆盖"激活即执行"自动推进行为，用户主动介入时优先响应中断
+
+**修复**：
+- 回应遗留讨论项：弥补了非 CONFIRM 阶段用户中途打断无正式处理路径的空白
+
+## v4.8 (2026-05-24)
+### 系统审查修复版 + 自绑定增强版
+
+**修复之前发现的所有问题**：
+- **版本号4重不一致**：SKILL.md frontmatter v4.4/body v4.5、SKILL-execution.md/baton-protocol.md v4.4、agent文件 4.2、quality-auditor-agent 1.0、实际内容已含v4.6变更 — 全部统一为v4.6，agent统一为4.4，QA agent统一为1.1
+- **质量审核缺失于检查清单**：template-artifacts.md 中 DESIGN/IMPLEMENT/VERIFY 的"完成后检查清单"缺失质量审核触发步骤 — 全部补充
+- **baton审核状态缺失**：`quality_audit_judge` 状态选项缺少"已打回" — 补充为"未审核/已通过/已打回"
+- **产物列表前缀缺失**：SKILL.md frontmatter 质量审核报告列表第二个起丢了 `_quality_audit_` 前缀 — 修正为完整路径
+- **跳越条件不完整**：仅定义IMPLEMENT/VERIFY跳过，但chunk-02-flows定义DESIGN也可跳过（文档完善流程）— 补充DESIGN跳过条件
+- **子章节编号不符**：`## 三、核心流程与场景映射` 下使用 `### 2.1` / `### 2.2`，应使用 `### 3.1` / `### 3.2` — 修正
+- **质量审核引用路径不一致**：`read agents/quality-auditor-agent.md + quality-control/00-quality-system.md` 缺少 `{Skill路径}`前缀 — 统一补充
+- **JUDGE回环语义问题**：JUDGE→DESIGN/IMPLEMENT修复回环时使用"JUDGE ✅"（语义矛盾，流程还在进行中）— 改为`JUDGE ➡ DESIGN(修复模式)` / `JUDGE ➡ IMPLEMENT(修复模式)`
+
+**新增自绑定机制（防止AI绕过状态机）**：
+- **🔗 自绑定条款**（SKILL.md）：声明所有规则无条件适用于元任务（审查/修复Skill自身），列出4个不构成绕过依据的借口，明确定义违规后果
+- **🛡️ 首次响应守卫**（SKILL.md）：最外层防线，AI第一次回复必须满足3个条件（第一行输出状态、写出实际命令执行记录、禁止包含实质性工作），列举5种违规模式
+- **扩展AI不得清单**：新增3条禁令（元任务绕过、先读文件绕过、Task子Agent绕过）
+- **子Agent约束**（SKILL-execution.md 新增二章）：明确Task子Agent返回后必须回到状态机、Quality Auditor是阶段内步骤不是独立流转、search子Agent的限制
+- **自绑定审查流程4**（chunk-02-flows.md 新增）：专为元任务设计的6步流程，完整7阶段**禁止跳过**
+- **元任务场景检测**（chunk-01-guide.md）：激活确认表新增 🪞 元任务类，附绑定说明
+- **核心流程表扩展**（SKILL-execution.md）：从7个流程扩展为8个，新增🪞自绑定审查流程
+
+**涉及文件**：
+- SKILL.md：自绑定条款、首次响应守卫、AI不得扩展
+- SKILL-execution.md：新增子Agent约束章、章节编号重构(2→7)、流程表扩展(7→8)
+- SKILL.chunks/chunk-01-guide.md：元任务场景检测
+- SKILL.chunks/chunk-02-flows.md：新增流程4自绑定审查
+- 6-docs/changelog.md：本次变更记录
+
+---
+
+## v4.6 (2026-05-24)
+
+### 代入式演练修复版 — 修复演练发现的执行层面问题
+
+**Bug 修复**：
+- **消除自检清单三体问题**：SKILL-execution.md 中 4 个阶段的自检清单全部改为"参考对应 Agent 定义"的简洁引用，消除与 template-artifacts.md、Agent 定义的三份清单冲突。统一以 template-artifacts.md 为最终标准
+- **统一质量审核与检查点顺序**：ANALYZE/DESIGN/VERIFY 阶段的质量审核（原 Step 5/6）和检查点验证（原 Step 4/5）顺序对调，全部统一为"自检 → 质量审核 → 检查点 → 更新接力棒"
+- **明确 JUDGE 决策优先级**：补充决策优先级规则——Quality Auditor 最终等级为最高优先级（D 级阻断），VERIFY 的 PASS/FAIL 用于决定修复方向
+- **扩充 IMPLEMENT 自检清单**：从 4 项扩展至 6 项，补充任务完成度检查、文件一致性检查、破坏性变更检查
+- **补充 FAILED 恢复流程**：新增 FAILED 状态恢复流程（读取baton → 展示失败摘要 → 提供恢复选项），明确 AI 不能自动恢复，需用户介入
+- **DESIGN_FIX 模式复位**：DESIGN 阶段更新接力棒时增加"模式重置为 NORMAL"步骤
+- **START 阶段最小化接力棒模板**：新增 30 行最小化模板，进入 ANALYZE 时再扩展为完整模板
+- **多语言验证命令**：verifier-agent.md Layer 1-4 验证命令表扩展 Java（Gradle/Maven）和 Go 命令
+
+**涉及文件**：
+- SKILL-execution.md：4 阶段自检清单引用化、审核+检查点顺序统一、JUDGE 决策优先级、IMPLEMENT 清单扩充、FAILED 恢复流程
+- protocols/baton-protocol.md：新增 START 阶段最小化模板
+- agents/verifier-agent.md：验证命令表扩展 Java/Go
+- 6-docs/changelog.md：本次变更记录
+
+---
+
+## v4.5 (2026-05-24)
+
+### 质量审核修复版 — 修复审查发现的所有问题
+
+**Bug 修复**：
+- **统一版本号**：SKILL.md metadata 与 body 统一为 v4.4（原 metadata v4.3、body v4.4），SKILL-execution.md、README.md、manifest.yaml 等 7 个文件版本全部统一
+- **消除 CONFIRM 矛盾**：移除条件性跳过中 CONFIRM 自动确认规则，CONFIRM 阶段严格执行"必须等待用户确认"
+- **补全 VERIFY 前置检查**：SKILL-execution.md VERIFY 阶段前置检查补充 `_quality_audit_implement.md`（原遗漏，与 run-checks.ps1 不一致）
+- **修正章节编号**：SKILL-execution.md 修复了两个"二、"的编号重复（二→三→四→五→六），子章节编号同步修正
+- **调整审核场景顺序**：quality-auditor-agent.md 中的审核场景章节按 execution 顺序排列（analysis→design→implement→verify→judge）
+- **精简通用流程**：合并 Step 4（自检清单）和 Step 4.5（验证链检查）为单一"自检+验证链检查"步骤，消除边界模糊
+- **移除 TODO_RESOLVE 占位**：条件性跳过表中移除未实现的 TODO_RESOLVE 未来扩展标注
+- **添加验证体系说明**：通用流程头部新增验证体系关系说明，澄清 5 层验证概念各自的用途和定位
+- **明确元任务路径规则**：补充 cwd 定义和后备检查条件说明
+- **自检清单权威来源**：在验证链规则中声明 artifacts/template-artifacts.md 为 Agent 自检清单的最终标准
+
+**涉及文件**：
+- SKILL.md：版本号统一、元任务路径规则补充、验证链规则补充
+- SKILL-execution.md：版本号统一、CONFIRM 跳过移除、VERIFY 前置检查补全、章节编号修正、通用流程合并、验证体系说明
+- README.md：版本号统一
+- 1-manifest/skill-manifest.yaml：版本号统一
+- agents/quality-auditor-agent.md：审核场景章节顺序调整
+- artifacts/template-artifacts.md：版本号统一
+- protocols/baton-protocol.md：版本号统一
+- 6-docs/changelog.md：本次变更记录
+
+---
+
+## v4.4 (2026-05-23)
+
+### 强制执行版 — 参照 ManualGen 强化自执行机制
+
+**新机制**：
+- **"激活即执行"**：AI 激活后自动沿状态机推进，无需用户逐一下令
+- **"AI 不得"明确清单**：5条禁令（等待命令、问下一步、跳产物、口头展示、路径模糊）
+- **状态路由表新增"自动推进"列**：每阶段标注 ✅ 自动 / ⛔ 等待用户
+- **验证链规则**：计数验证 + 列表验证 + 文件验证 + 流程图验证，防止虚假完成
+- **条件性跳过机制**：首次运行不跳过，后续按条件跳过特定阶段
+
+**Bug 修复**：
+- **IMPLEMENT 审核报告覆盖 Bug**：原指向 `_quality_audit_design.md` 导致被 DESIGN 审核报告覆盖，改为 `_quality_audit_implement.md`
+- **审核场景数不一致**：chunk-03-harness.md 描述"4个阶段"漏了 IMPLEMENT，修正为5个
+- **run-checks 缺检查**：DESIGN/VERIFY/IMPLEMENT 入口共缺3个质量审核产物检查，已补齐
+- **validate-artifact 缺 quality_audit_implement**：ValidateSet 新增类型
+
+**涉及文件**：
+- SKILL.md：新增"激活即执行"+"AI 不得"+验证链规则+自动推进列；产物列表新增 _quality_audit_implement.md
+- SKILL-execution.md：新增条件性跳过机制+验证链检查步骤；IMPLEMENT 审核报告路径修复
+- chunk-03-harness.md：审核关卡数 4→5，新增实现质量审核关卡
+- protocols/baton-protocol.md：质量审核追踪表新增 quality_audit_implement 行；产物清单新增对应项
+- artifacts/template-artifacts.md：baton 模板同步更新审核追踪表+产物清单；命名规则扩展为5阶段
+- scripts/harness/run-checks.ps1：DESIGN/VERIFY/IMPLEMENT 补齐缺失的 QA 产物检查
+- scripts/harness/validate-artifact.ps1：ValidateSet 新增 quality_audit_implement
+- 6-docs/changelog.md：本次变更记录
+
+---
+
 ## v4.3 (2026-05-21)
 
 ### 自强制机制（P0）— 阻止AI绕过状态机
@@ -499,8 +619,3 @@
 - 符合TRAE官方规范
 - 渐进式披露原则
 - 职责单一设计
-
----
-
-**文档版本**: 3.3  
-**更新时间**: 2026-05-15

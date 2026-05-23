@@ -37,6 +37,40 @@
 
 ## 三、接力棒文件模板
 
+### 3.1 START 阶段最小化模板（首次创建用）
+
+START 阶段只需创建以下简化版本（~30 行），随着阶段推进逐步扩展为完整模板：
+
+```markdown
+# 🔄 ReqPlan-v3 接力棒
+
+## 元信息
+
+| 字段 | 值 |
+|------|-----|
+| 项目 | {项目名称} |
+| 开始时间 | {ISO 8601} |
+| 最后更新 | {ISO 8601} |
+| 当前状态 | START |
+| 模式 | NORMAL |
+
+## 进度追踪
+
+### 阶段完成情况
+
+- [ ] START - 启动
+- [ ] ANALYZE - 分析
+- [ ] CONFIRM - 确认
+- [ ] DESIGN - 设计
+- [ ] IMPLEMENT - 实现
+- [ ] VERIFY - 验证
+- [ ] JUDGE - 判断
+```
+
+进入 ANALYZE 阶段时，扩展为下方的完整模板（增加质量审核追踪、产物清单、任务追踪等）。
+
+### 3.2 完整模板（ANALYZE 起使用）
+
 ```markdown
 # 🔄 ReqPlan-v3 接力棒
 
@@ -51,6 +85,16 @@
 | 模式 | {NORMAL/DESIGN_FIX/REVIEW_FIX/RETRY_FIX} |
 | 重试计数 | {0/1/2} |
 | design_fix_retry | {0/1/2} |
+
+## 质量审核追踪
+
+| 审核阶段 | 状态 | 分数 | 重试次数 | 报告文件 |
+|---------|------|------|---------|---------|
+| quality_audit_analysis | 未审核/已通过/已打回 | - | 0/2 | - |
+| quality_audit_design | 未审核/已通过/已打回 | - | 0/2 | - |
+| quality_audit_implement | 未审核/已通过/已打回 | - | 0/2 | - |
+| quality_audit_verify | 未审核/已通过/已打回 | - | 0/2 | - |
+| quality_audit_judge | 未审核/已通过/已打回 | - | - | - |
 
 ## 进度追踪
 
@@ -70,6 +114,11 @@
 - [ ] `.agent/harness/_design.md` - 设计文档
 - [ ] `.agent/harness/_implementation.md` - 实现摘要
 - [ ] `.agent/harness/_verification.md` - 验证报告
+- [ ] `.agent/harness/_quality_audit_analysis.md` - 分析审核报告
+- [ ] `.agent/harness/_quality_audit_design.md` - 设计审核报告
+- [ ] `.agent/harness/_quality_audit_implement.md` - 实现审核报告
+- [ ] `.agent/harness/_quality_audit_verify.md` - 验证审核报告
+- [ ] `.agent/harness/_quality_audit_judge.md` - 最终判定报告
 
 ### ⭐ 任务追踪（统一管理）
 
@@ -216,19 +265,4 @@ write {项目路径}/.agent/harness/_baton.md
 
 # 检查产物
 ls -la {项目路径}/.agent/harness/
-
-# 校验接力棒格式（强制检查点）
-. {Skill路径}/scripts/harness/validate-baton.ps1 -ProjectPath {项目路径}
-
-# 校验产物格式（强制检查点）
-. {Skill路径}/scripts/harness/validate-artifact.ps1 -ProjectPath {项目路径} -Artifact <analysis|design|implementation|verification>
-
-# 阶段转换综合检查（强制检查点）
-. {Skill路径}/scripts/harness/run-checks.ps1 -ProjectPath {项目路径} -Stage <阶段名>
 ```
-
----
-
-*本文档是 ReqPlan-v3 Harness 系统的核心协议*
-*版本: 4.1*
-*更新: 2026-05-20*

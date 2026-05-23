@@ -1,343 +1,139 @@
-# ReqPlan-v3 Harness 验证与调试指南
+# ReqPlan-v3 验证与调试指南
 
-> 本文档说明如何验证和调试 ReqPlan-v3 Harness 系统
-
----
-
-## 一、验证机制
-
-### 1.1 产物契约验证
-
-每个 Agent 的产物必须满足契约要求（模板详见 artifacts/template-artifacts.md）：
-
-| Agent | 产物 | 存储位置 |
-|-------|------|----------|
-| Analyzer | `_analysis.md` | `.agent/harness/` |
-| Designer | `_design.md` | `.agent/harness/` |
-| Implementer | `_implementation.md` | `.agent/harness/` |
-| Verifier | `_verification.md` | `.agent/harness/` |
-
-### 1.2 状态机验证
-
-状态转移必须遵循规则：
-
-```
-✓ 允许的转移：
-  - START → ANALYZE
-  - ANALYZE → CONFIRM
-  - CONFIRM → DESIGN | ANALYZE | ABORT
-  - DESIGN → IMPLEMENT
-  - IMPLEMENT → VERIFY
-  - VERIFY → JUDGE
-  - JUDGE → DONE | DESIGN | IMPLEMENT | FAILED
-  - DESIGN → IMPLEMENT（修复模式）
-  - IMPLEMENT → VERIFY（修复模式）
-
-✗ 不允许的转移：
-  - START → DESIGN（跳过 ANALYZE）
-  - DESIGN → DONE（跳过 IMPLEMENT 和 VERIFY）
-  - JUDGE → ANALYZE（回退过多阶段）
-```
+> 本文档是 ReqPlan-v3 Harness 系统的验证与调试辅助手册。
 
 ---
 
-## 二、调试方法
+## 一、产物契约验证
 
-### 2.1 检查产物文件
+每个阶段执行完成后，必须验证产物文件的完整性和格式正确性。
 
-当流程出现问题时，首先检查产物文件：
+### 1.1 验证方法
 
-```bash
-# 检查产物目录
-ls -la {项目路径}/.agent/harness/
+```powershell
+# 检查产物文件是否存在
+Test-Path "{项目路径}/.agent/harness/_analysis.md"
 
-# 检查产物内容
-cat {项目路径}/.agent/harness/_analysis.md
-cat {项目路径}/.agent/harness/_design.md
-cat {项目路径}/.agent/harness/_verification.md
+# 读取产物文件确认内容
+cat "{项目路径}/.agent/harness/_analysis.md" | Select-Object -First 5
 ```
 
-### 2.2 检查状态
+### 1.2 产物完整性检查模板
 
-```bash
-# 检查当前状态
-grep "状态" {项目路径}/.agent/harness/_*.md
+| 阶段 | 必需产物 | 验证要点 |
+|------|---------|---------|
+| ANALYZE | `_analysis.md` | 基本信息完整、问题清单、约束条件 |
+| DESIGN | `_design.md` | 技术方案、任务列表、验证方案 |
+| IMPLEMENT | `_implementation.md` | 修改摘要、文件清单、测试结果 |
+| VERIFY | `_verification.md` | 验证结果、违规清单、判定结论 |
 
-# 检查历史记录
-cat {项目路径}/docs/harness/history.yaml
+### 1.3 接力棒验证
+
+```powershell
+# 读取接力棒
+cat "{项目路径}/.agent/harness/_baton.md"
 ```
 
-### 2.3 检查任务追踪
-
-```bash
-# 检查接力棒中的任务追踪
-cat {项目路径}/.agent/harness/_baton.md | grep -A 20 "任务追踪"
-
-# 检查长期归档
-cat {项目路径}/docs/harness/history.yaml
-```
+检查接力棒的：
+- 当前状态与实际执行状态一致
+- 产物清单与实际产物一致
+- 发现问题摘要与当前阶段匹配
 
 ---
 
-## 三、常见问题
+## 二、状态机验证
 
-### 3.1 产物文件缺失
+### 2.1 状态转换验证
 
-**问题**：`_analysis.md` 或 `_design.md` 不存在
+| 当前状态 | 允许的下一个状态 | 验证方式 |
+|---------|----------------|---------|
+| START | ANALYZE | 接力棒状态字段 |
+| ANALYZE | CONFIRM | 产物 _analysis.md 存在 |
+| CONFIRM | DESIGN/ANALYZE/ABORT | 用户响应 |
+| DESIGN | IMPLEMENT | 产物 _design.md 存在 |
+| IMPLEMENT | VERIFY | 产物 _implementation.md 存在 |
+| VERIFY | JUDGE | 产物 _verification.md 存在 |
+| JUDGE | DONE/DESIGN/IMPLEMENT/FAILED | 判定结果 |
 
-**排查**：
-1. 检查对应 Agent 是否执行
-2. 检查 Agent prompt 是否正确
-3. 检查文件路径是否正确
+### 2.2 阻断条件检查
 
-**解决**：
-1. 重新运行对应 Agent
-2. 手动创建产物文件（按模板）
-
-### 3.2 状态转移错误
-
-**问题**：状态机跳过了某个阶段
-
-**排查**：
-1. 检查 SKILL.md 中的禁止清单
-2. 检查状态机定义
-3. 检查产物文件
-
-**解决**：
-1. 修正状态转移
-2. 重新执行被跳过的阶段
-3. 补充缺失的产物
-
-### 3.3 验证失败
-
-**问题**：验证阶段持续失败
-
-**排查**：
-1. 检查 Layer 1 是否通过
-2. 检查错误分类是否正确
-3. 检查重试计数
-
-**解决**：
-1. 根据错误类型选择修复模式
-2. 修复后重新验证
-3. 如果超过重试上限，报告失败
-
-### 3.4 Agent 执行失败
-
-**问题**：子 Agent 无法正常执行
-
-**排查**：
-1. 检查 Agent prompt 文件是否存在
-2. 检查产物读取是否正确
-3. 检查上下文是否完整
-
-**解决**：
-1. 补充缺失信息
-2. 手动触发 Agent
-3. 降级为单 Agent 模式
+| 阻断条件 | 验证方式 | 失败处理 |
+|---------|---------|---------|
+| 前置产物缺失 | 读文件确认 | 返回上一阶段 |
+| 质量审核不通过 | 读审核报告确认 | 返回修复 |
+| 重试超限 | 接力棒重试计数 | 标记 FAILED |
 
 ---
 
-## 四、调试工具
+## 三、调试方法
 
-### 4.1 状态检查命令
+### 3.1 Windows 环境调试
 
-```bash
-# 查看所有产物文件
-find {项目路径}/.agent/harness -name "*.md" -type f
+```powershell
+# 检查目录是否存在
+Test-Path ".agent/harness/"
 
-# 查看最近修改的产物
-ls -lt {项目路径}/.agent/harness/
+# 如果不存在，创建目录
+mkdir -Force ".agent/harness/"
 
-# 查看产物创建时间
-stat {项目路径}/.agent/harness/_*.md
+# 列出所有产物
+Get-ChildItem ".agent/harness/" | Select-Object Name, LastWriteTime
 ```
 
-### 4.2 流程回放
+### 3.2 产物写入验证
 
-```bash
-# 按时间顺序查看产物
-cat {项目路径}/.agent/harness/_analysis.md | grep "分析时间"
-cat {项目路径}/.agent/harness/_design.md | grep "设计时间"
-cat {项目路径}/.agent/harness/_verification.md | grep "验证时间"
-```
-
-### 4.3 错误追踪
-
-```bash
-# 查找失败记录
-grep -r "FAIL" {项目路径}/.agent/harness/
-grep -r "FAILED" {项目路径}/.agent/harness/
-
-# 查看失败详情
-cat {项目路径}/.agent/harness/_verification.md | grep -A 10 "错误详情"
+```powershell
+# 写入产物后立即验证
+# 例如：验证 _analysis.md 是否写入成功
+$content = cat "{项目路径}/.agent/harness/_analysis.md"
+if ($content.Length -gt 0) {
+    Write-Output "写入成功，文件大小：$($content.Length) 字符"
+} else {
+    Write-Output "写入失败或文件为空"
+}
 ```
 
 ---
 
-## 五、性能优化
+## 四、常见问题处理
 
-### 5.1 减少产物文件大小
+### 4.1 接力棒丢失或损坏
 
-```
-建议：
-- 产物文件尽量精简
-- 详细的错误信息放到附录
-- 使用表格和列表而非大段文字
-```
-
-### 5.2 加速状态转移
-
-```
-优化点：
-- 产物文件使用固定格式，便于快速解析
-- 避免在产物中包含大段代码
-- 使用头部摘要代替完整内容
+```powershell
+# 重建接力棒
+if (-not (Test-Path "{项目路径}/.agent/harness/_baton.md")) {
+    mkdir -Force "{项目路径}/.agent/harness/"
+    # 写入新的接力棒文件，从 START 开始
+}
 ```
 
-### 5.3 缓存复用
+### 4.2 产物被意外覆盖
 
-```
-策略：
-- 可复用的代码分析结果可以缓存
-- 技术栈信息可以复用
-- 历史决策可以作为参考
-```
+- 立即回滚：从历史记录恢复（需启用版本控制）
+- 未启用版本控制时：重新从当前阶段生成产物
+
+### 4.3 Windows vs Unix 命令差异
+
+| 操作 | Unix 命令 | Windows PowerShell |
+|------|----------|-------------------|
+| 创建目录 | `mkdir -p` | `mkdir -Force` |
+| 读文件 | `cat` | `cat` 或 `Get-Content` |
+| 写文件 | `echo >` | `Set-Content` |
+| 路径分隔符 | `/` | `\`（支持 /） |
+
+### 4.4 质量审核不通过
+
+1. 读取审核报告：`cat "{项目路径}/.agent/harness/_quality_audit_{phase}.md"`
+2. 定位"待修复问题清单"
+3. 逐条修复
+4. 重审（新报告文件命名：`_quality_audit_{phase}_v2.md`）
 
 ---
 
-## 六、安全检查
+## 五、版本说明
 
-### 6.1 越权检查
-
-检查是否有 Agent 越权：
-
-```
-Analyzer Agent 越权？
-  - 编写代码？ ❌ 禁止
-  - 运行测试？ ❌ 禁止
-
-Designer Agent 越权？
-  - 编写代码？ ❌ 禁止
-  - 运行测试？ ❌ 禁止
-
-Implementer Agent 越权？
-  - 修改非任务范围文件？ ❌ 禁止
-  - 跳过验证？ ❌ 禁止
-
-Verifier Agent 越权？
-  - 修改代码？ ❌ 禁止
-```
-
-### 6.2 数据完整性
-
-检查产物数据完整性：
-
-```
-_analysis.md 必须包含：
-  - 分析时间
-  - 核心功能（至少 1 个）
-  - 技术栈
-
-_design.md 必须包含：
-  - 设计时间
-  - 任务列表（至少 1 个）
-  - 验证方案
-
-_verification.md 必须包含：
-  - 验证时间
-  - 最终判定
-  - Layer 1 结果
-```
+本文档跟随 ReqPlan-v3 主版本。当前对应版本见 SKILL.md 版本信息。
 
 ---
 
-## 七、日志记录
-
-### 7.1 关键事件日志
-
-建议在关键节点记录日志：
-
-```markdown
-# .agent/harness/trace.log
-
-[2026-05-19 10:00:00] ANALYZE 开始
-[2026-05-19 10:05:00] ANALYZE 完成，产物: _analysis.md
-[2026-05-19 10:05:01] CONFIRM 开始
-[2026-05-19 10:06:00] CONFIRM 用户确认
-[2026-05-19 10:06:01] DESIGN 开始
-...
-```
-
-### 7.2 错误日志
-
-```markdown
-# .agent/harness/error.log
-
-[2026-05-19 10:10:00] ERROR: Layer 1 失败
-  - 文件: types/order.ts
-  - 错误: Missing return type
-  - 建议: 添加返回类型
-
-[2026-05-19 10:15:00] ERROR: 重试次数超限
-  - 任务: 列表页面实现
-  - 重试次数: 2
-  - 原因: 测试持续失败
-```
-
----
-
-## 八、回归测试
-
-### 8.1 基本流程测试
-
-```
-测试场景：
-1. 启动 ReqPlan
-2. 输入需求："做一个用户登录功能"
-3. 检查状态转移：START → ANALYZE → CONFIRM
-4. 确认需求
-5. 检查状态转移：CONFIRM → DESIGN → IMPLEMENT → VERIFY
-6. 检查状态转移：VERIFY → JUDGE → DONE
-```
-
-### 8.2 异常流程测试
-
-```
-测试场景：
-1. 启动 ReqPlan
-2. 输入需求："做一个用户登录功能"
-3. 验证失败（模拟）
-4. 检查重试机制
-5. 检查超过重试上限后的处理
-```
-
----
-
-## 九、监控指标
-
-### 9.1 关键指标
-
-| 指标 | 定义 | 目标 |
-|------|------|------|
-| 成功率 | 流程完成的比率 | > 90% |
-| 平均执行时间 | 从开始到完成的平均时间 | < 30 分钟 |
-| 重试率 | 需要重试的任务比率 | < 20% |
-| 产物完整率 | 产物文件完整的比率 | > 95% |
-
-### 9.2 监控方法
-
-```bash
-# 统计成功率
-grep -c "DONE" {项目路径}/docs/harness/history.yaml
-
-# 统计重试次数
-grep -c "RETRY" {项目路径}/.agent/harness/_verification.md
-
-# 统计产物缺失
-ls {项目路径}/.agent/harness/_*.md | wc -l
-```
-
----
-
-*本文档用于 ReqPlan-v3 Harness 系统的验证和调试*
+*本文档是 ReqPlan-v3 Harness 系统的调试辅助手册*

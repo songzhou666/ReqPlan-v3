@@ -13,7 +13,7 @@
 - [ ] 2. _design.md 存在
 - [ ] 3. _implementation.md 存在
 - [ ] 4. 代码已保存到文件系统（不是只在对话中）
-- [ ] 5. 前置 IMPLEMENT 阶段已通过 run-checks 校验（进入 VERIFY）
+- [ ] 5. 前置 IMPLEMENT 阶段已完成且质量审核已通过（进入 VERIFY）
 
 **如果任一未满足 → 停止执行 → 返回总控处理**
 ```
@@ -227,18 +227,18 @@ Web 项目场景：
 
 各层级对应的实际可执行命令参考：
 
-| 层级 | 检查项 | 命令 (Python) | 命令 (Node.js) | 通过标准 |
-|------|--------|---------------|----------------|----------|
-| L1 静态检查 | 代码风格 | `ruff check {files}` | `npm run lint` | 零 Error |
-| L1 静态检查 | 类型检查 | `mypy {files}` | `npm run typecheck` | 零类型错误 |
-| L1 静态检查 | 格式检查 | `black --check .` | `prettier --check .` | 无格式差异 |
-| L2 单元测试 | 单测执行 | `pytest tests/ -v --tb=short` | `npm run test` | 通过率 ≥ 90% |
-| L2 单元测试 | 覆盖率 | `pytest --cov=. tests/` | `npm run test -- --coverage` | P0 覆盖 ≥ 80% |
-| L3 构建集成 | 编译检查 | `python -m py_compile {files}` | `npm run build` | 编译无错误 |
-| L3 构建集成 | 依赖安装 | `pip install -r requirements.txt` | `npm install` | 安装成功 |
-| L4 异常处理 | 异常输入 | 传入无效/空值参数 | API 400/404 测试 | 不崩溃，提示明确 |
-| L4 异常处理 | 超时处理 | 模拟超时场景 | 超时中间件测试 | 触发预期策略 |
-| L5 流程合规 | 产物检查 | 检查 `_analysis.md` 等文件存在 | — | 所有产物完整 |
+| 层级 | 检查项 | 命令 (Python) | 命令 (Node.js) | 命令 (Java) | 命令 (Go) | 通过标准 |
+|------|--------|---------------|----------------|-------------|-----------|----------|
+| L1 静态检查 | 代码风格 | `ruff check {files}` | `npm run lint` | `./gradlew checkstyleMain` / `mvn checkstyle:check` | `gofmt -l .` / `golangci-lint run` | 零 Error |
+| L1 静态检查 | 类型检查 | `mypy {files}` | `npm run typecheck` | 编译时类型检查（javac） | `go vet ./...` | 零类型错误 |
+| L1 静态检查 | 格式检查 | `black --check .` | `prettier --check .` | `./gradlew spotlessCheck` | `gofmt -d .` | 无格式差异 |
+| L2 单元测试 | 单测执行 | `pytest tests/ -v --tb=short` | `npm run test` | `./gradlew test` / `mvn test` | `go test ./... -v` | 通过率 ≥ 90% |
+| L2 单元测试 | 覆盖率 | `pytest --cov=. tests/` | `npm run test -- --coverage` | `./gradlew jacocoTestReport` | `go test -coverprofile=coverage.out ./...` | P0 覆盖 ≥ 80% |
+| L3 构建集成 | 编译检查 | `python -m py_compile {files}` | `npm run build` | `./gradlew compileJava` / `mvn compile` | `go build ./...` | 编译无错误 |
+| L3 构建集成 | 依赖安装 | `pip install -r requirements.txt` | `npm install` | `./gradlew build --refresh-dependencies` | `go mod download` | 安装成功 |
+| L4 异常处理 | 异常输入 | 传入无效/空值参数 | API 400/404 测试 | ControllerAdvice 统一异常处理检查 | HTTP 错误处理中间件检查 | 不崩溃，提示明确 |
+| L4 异常处理 | 超时处理 | 模拟超时场景 | 超时中间件测试 | Spring @Transactional(timeout) 检查 | context.WithTimeout 检查 | 触发预期策略 |
+| L5 流程合规 | 产物检查 | 检查 `_analysis.md` 等文件存在 | — | — | — | 所有产物完整 |
 
 ---
 
@@ -346,6 +346,20 @@ Web 项目场景：
 
 ---
 
-*本文档是 ReqPlan-v3 Harness 系统的 Verifier Agent 定义*
-*版本: 4.1*
-*更新时间: 2026-05-20*
+## 8. 质量审核触发
+
+> 验证完成后，必须触发独立质量审核（独立子Agent盲审模式）。
+
+```markdown
+## 产物完成后的强制操作
+
+- [ ] 1. _verification.md 已写入文件系统
+- [ ] 2. 通知总控执行质量审核（拉起 Quality Auditor 子Agent，进入独立盲审模式）
+- [ ] 3. 审核对象包括：代码文件 + _implementation.md
+- [ ] 4. 如果审核不通过，读取 _quality_audit_verify.md 的"待修复问题清单"并修复
+- [ ] 5. 修复后更新产物版本号 → 再次拉起审核
+- [ ] 6. 更新接力棒 quality_audit_verify 状态
+
+**阻断规则**：质量审核不通过 → 不能进入 JUDGE 阶段
+**盲审模式**：子Agent与主对话上下文完全隔离，只读产物文件本身
+```

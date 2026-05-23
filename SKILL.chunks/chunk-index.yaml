@@ -7,7 +7,7 @@
 |----|------|------|------|------------|
 | 01 | chunk-01-guide.md | ~2KB | 意图引导（始终加载） | always |
 | 02 | chunk-02-flows.md | ~4KB | 三大流程定义 | high |
-| 03 | chunk-03-harness.md | ~3KB | 验证与审查 | medium |
+| 03 | chunk-03-harness.md | ~4KB | 验证、审查与质量审核 | medium |
 | 04 | chunk-04-chain.md | ~3KB | 信息落点与链路 | low |
 
 ## 加载规则
