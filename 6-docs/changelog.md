@@ -1,5 +1,43 @@
 # ReqPlan 变更日志
 
+## v5.1 (2026-05-28)
+### TRACE 优化完善版 — 基于 skill-trace-checker 评测驱动的二次优化
+
+**新增**：
+- **[SKILL.md 新增 FAQ 章节]**（C4 改进：4.0→5.0）：6 题引导型 FAQ，覆盖模式选择、入门引导、中断恢复、FAQ 体系说明、质量审核、适用范围，与 [reference/faq-deep.md](reference/faq-deep.md) 的 10 题深度 FAQ 互补
+- **[SKILL.md 3.2.1 新增 P0/P1 安全风险示例]**（T2 改进：4.5→5.0）：4 个典型安全场景表格（SQL注入 P0、硬编码凭据 P0、越权访问 P1、IDOR P1），含场景描述、违规后果、正确做法
+- **[SKILL.md 触发机制新增功能选择决策表]**（A2 改进：4.5→5.0）：Mermaid 流程图 + 8 行判断条件表，覆盖 8 种用户场景的流程映射
+- **[SKILL.md 核心机制新增超范围场景处理引导]**（R4 改进：4.5→5.0）：3 个典型超范围场景（无法实现的任务、不相干任务合并、技术方案超出范围）及处理话术模板
+- **[SKILL-execution.md 新增超范围场景处理引导章节]**（第8章）：5 个超范围场景（不支持语言、任务合并、跳过检查点、外部资源、输出不满意）
+
+**增强**：
+- 文档索引新增 FAQ 分类，方便快速定位主文档 FAQ 和深度 FAQ
+- 核心设计列表新增 4 个特性描述（功能选择决策表、FAQ 章节、超范围引导、安全风险示例）
+
+**涉及文件**：
+- SKILL.md：新增 FAQ 章节、安全风险示例表格、功能选择决策表、超范围场景处理引导、版本升级至 v5.1
+- SKILL-execution.md：新增"八、超范围场景处理引导"章节
+- 6-docs/changelog.md：本次变更记录
+
+---
+
+## v5.0 (2026-05-28)
+### TRACE 品质提升版 — 基于 skill-trace-checker 评测驱动优化
+
+**新增**：
+- **[reference/anti-patterns.md](reference/anti-patterns.md)**（P0 反模式说明）：5 类常见反模式及改进对比（跳过状态机、对话替代产物、未完成检查点推进、Task子Agent绕过、CONFIRM跳过），每类含错误做法→问题分析→正确做法→改进对比→速查表
+- **[reference/faq-deep.md](reference/faq-deep.md)**（P1 深度FAQ）：10 题边缘场景 FAQ，覆盖工具兼容（Q1）、接力棒恢复（Q2）、审核不通过（Q3）、CONFIRM关闭（Q4）、阶段跳过（Q5）、多人协作（Q6）、中断恢复（Q7）、语言适配（Q8）、产物回滚（Q9）、需求偏差（Q10）
+- **SKILL.md 新增"安全性与隐私"章节**（第3节）：包含数据处理原则（范围限定/不收集敏感信息/本地存储）、禁止行为（5条禁令）、脱敏操作指导（路径/密钥/配置/日志）、安全使用建议（版本控制/产物保护/隔离环境/合规审查）
+
+**增强**：
+- **细化边界描述**（T3）：When NOT to use 从 2 条扩展为 6 条，补充"纯粹信息查询"、"仅浏览代码"、"需求模糊拒绝澄清"、"单次修改不涉及多阶段"等边界条件
+- **增加开场白示例**（E4）：chunk-01-guide.md 新增 6 个可复制场景示例（开发/审查/Bug修复/重构/文档/测试）
+
+**统一**：
+- 版本号从 v4.9 升级为 v5.0
+- SKILL.md 文档索引注册 reference/anti-patterns.md 和 reference/faq-deep.md
+- 涉及文件：SKILL.md, SKILL.chunks/chunk-01-guide.md, reference/anti-patterns.md, reference/faq-deep.md, 6-docs/changelog.md
+
 ## v4.9 (2026-05-23)
 ### 中断处理机制版
 
