@@ -1,120 +1,119 @@
-# ReqPlan-v3 — Harness Engineering 项目全生命周期管理引擎
+# ReqPlan-v3 — 软件工程全生命周期管理引擎
 
-> 基于 Harness Engineering 理念 + 接力棒持久化机制，覆盖项目从需求分析到最终判定的全流程。
+> 把"从需求到上线"变成一条不会遗漏、不会跳步的流水线。AI 自动推进，中途打断也能接着跑。
 
----
-
-## 核心特色
-
-- **7 阶段状态机**：START → ANALYZE → CONFIRM → DESIGN → IMPLEMENT → VERIFY → JUDGE → DONE，自动推进 + 用户确认点
-- **多 Agent 协作**：Analyzer / Designer / Implementer / Verifier / Quality Auditor 各司其职，通过文件契约传递产物
-- **接力棒持久化**：`.agent/harness/_baton.md` 记录状态、进度、产物清单，支持跨 Session 续跑
-- **五层验证体系**：静态检查 → 单元测试 → 构建集成 → 异常处理 → 流程合规
-- **独立质量审核**：每个阶段由 Quality Auditor 子Agent 独立盲审，审核不通过阻断流程
-- **用户中断处理**：任何阶段用户中途介入，支持立即重置 / 记入TODO / 仅讨论三选项
-- **自绑定审查**：支持审查和修复 Skill 自身，遵守与普通任务相同的状态机规则
+[![version](https://img.shields.io/badge/version-v3-blue)](./SKILL.md)
+[![level](https://img.shields.io/badge/level-L3-success)](./SKILL.md)
+[![license](https://img.shields.io/badge/license-MIT-green)](#许可证)
 
 ---
 
-## 快速开始
+## 这是什么
 
-### 首次使用
+你一定经历过这些项目管理噩梦：
+
+- 🔄 **需求改了三版**，代码写了一半发现方向错了，返工到哭
+- 📝 **上线了才发现没写文档**，接手的人一脸懵
+- ⏸️ **对话被打断 / 电脑关机**，下次回来 AI 已经忘了之前在干嘛
+- 🧩 **Bug 修复变成"按下葫芦浮起瓢"**，改好这个又炸了那个
+- 🚫 **跳过验证就上线**，质量完全靠运气
+
+**ReqPlan-v3 就是来兜这些底的——它把软件工程变成一条有严格顺序、有质量闸门、有断点续跑的流水线，AI 按阶段自动推进，不会跳步也不会遗漏。**
+
+---
+
+## 核心理念：Harness Engineering
+
+> Harness（马具）→ 给 AI 套上缰绳，让它在正确的轨道上跑，而不是想跑哪跑哪。
+
+| 原则 | 含义 |
+|------|------|
+| **角色边界** | 每个 Agent 只做一件事：分析 / 设计 / 实现 / 验证 / 审核 |
+| **状态机驱动** | 7 阶段严格顺序，不能跳步、不能回溯（除非质量审核打回） |
+| **产物契约** | Agent 之间通过文件传递，不靠对话记忆——断了也能接上 |
+| **质量闸门** | 每个阶段独立 Quality Auditor 盲审，不通过就打回重做 |
+| **接力棒持久化** | `.agent/harness/_baton.md` 记录一切，跨 Session 续跑 |
+
+---
+
+## 核心能力
+
+| 能力 | 说明 |
+|------|------|
+| **7 阶段自动推进** | START → ANALYZE → CONFIRM → DESIGN → IMPLEMENT → VERIFY → JUDGE → DONE |
+| **多 Agent 协作** | Analyzer / Designer / Implementer / Verifier / QA 各司其职 |
+| **断点续跑** | 对话中断、电脑关机，下次自动读取接力棒恢复进度 |
+| **五层验证体系** | 静态检查 → 单元测试 → 构建集成 → 异常处理 → 流程合规 |
+| **独立质量审核** | Quality Auditor 子 Agent 独立盲审，不通过阻断流程 |
+| **六维度最终判定** | JUDGE 阶段从架构/代码/运行时/覆盖/安全/文档 六维验收 |
+| **用户中断处理** | 支持立即重置 / 记入 TODO / 仅讨论 三种选项 |
+| **自绑定审查** | 支持审查和修复 Skill 自身（元任务） |
+
+---
+
+## 快速开始（30 秒入门）
+
+### 方式一：自然语言触发（最推荐）
+
+直接对 AI 说：
+
+> "帮我在 e:/my-app 项目里加一个用户登录功能，用 JWT 鉴权"
+
+→ ReqPlan-v3 自动启动完整项目流程：分析需求 → 生成设计 → 编码实现 → 验证 → 判定。
+
+或者更明确地说：
+
+> "用 ReqPlan 走一遍完整流程，给我在 my-app 里实现文件上传功能"
+
+### 方式二：斜杠命令
 
 ```bash
-/reqplan start     # 启动引导，选择流程
-/reqplan init      # 初始化 .agent/harness/ 目录
+/reqplan start                 # 启动引导，选择流程
+/reqplan init                  # 初始化 .agent/harness/ 目录
+# 中断后继续——再发一次 /reqplan start 即可自动续跑
 ```
+
+### 方式三：指定流程类型
+
+| 你想做什么 | 直接说 |
+|-----------|--------|
+| **新项目从零到验收** | "帮我在 e:/new-project 创建一个博客系统" |
+| **修复 Bug** | "帮我修一下 login.ts 里的 Token 过期问题" |
+| **重构代码** | "帮我重构 order-service，拆分成微服务" |
+| **只做设计评审** | "帮我审查一下这份数据库设计" |
+| **补充文档** | "帮我给这个项目补 API 文档" |
+| **测试优化** | "帮我给 user-service 加单元测试" |
 
 ### 续跑（中断后继续）
 
-```bash
-/reqplan start     # 自动读取接力棒，恢复进度
 ```
-
----
-
-## 核心流程
-
-| # | 流程 | 适用场景 |
-|---|------|----------|
-| 1 | 完整项目流程 | 新项目启动，从需求到验收 |
-| 2 | 需求迭代流程 | 已有项目的需求更新和迭代 |
-| 3 | 设计评审流程 | 架构设计、接口定义、数据库设计 |
-| 4 | 代码开发流程 | 代码实现、Bug 修复、功能开发 |
-| 5 | 测试优化流程 | 测试策略制定、用例设计、覆盖提升 |
-| 6 | 文档完善流程 | 技术文档、API 文档的补充 |
-| 7 | 架构重构流程 | 架构优化、技术债务清理 |
-| 8 | 自绑定审查流程 | 审查/修复 Skill 自身（元任务） |
-
----
-
-## 多 Agent 协作
-
-```mermaid
-flowchart TD
-    Controller["总控（状态机 + 调度 + 判定）"]
-    Analyzer["分析 Agent（explorer）"]
-    Designer["设计 Agent（worker）"]
-    Implementer["实现 Agent（worker）"]
-    Verifier["验证 Agent（worker）"]
-    QA["Quality Auditor 子Agent（独立盲审）"]
-
-    Controller --> Analyzer
-    Controller --> Designer
-    Controller --> Implementer
-    Controller --> Verifier
-    Analyzer --> A["_analysis.md"]
-    Designer --> D["_design.md"]
-    Implementer --> I["源码变更"]
-    Verifier --> V["_verification.md"]
-    Verifier -.-> QA
-    A -.-> QA
-    D -.-> QA
-    I -.-> QA
-    QA --> Q["阻断性评分\n不通过→返回修复"]
+你："我刚才做到哪了？"
+ReqPlan：（读取接力棒）→ 当前在 DESIGN 阶段，需求分析已完成，等待技术设计输出
+你："继续"
+ReqPlan：自动从 DESIGN 阶段接着跑...
 ```
-
-协作流程：
-1. 总控读取接力棒确定当前状态
-2. 按状态路由表调度对应的 Agent
-3. Agent 读取前置产物，生成当前阶段产物
-4. Quality Auditor 审核产物，通过后才能进入下一阶段
-5. 总控更新接力棒，自动推进到下一阶段
 
 ---
 
 ## 状态机
 
-```mermaid
-stateDiagram-v2
-    START --> ANALYZE
-    ANALYZE --> CONFIRM
-    CONFIRM --> DESIGN: 确认
-    CONFIRM --> ANALYZE: 修改
-    CONFIRM --> ABORT: 取消
-    DESIGN --> IMPLEMENT
-    IMPLEMENT --> VERIFY
-    VERIFY --> JUDGE
-
-    JUDGE --> DONE: 通过
-    
-    state JUDGE {
-        [*] --> 判定
-        判定 --> DONE: 通过
-        判定 --> DESIGN: 架构违规\n(最多2次)
-        判定 --> IMPLEMENT: 代码违规
-        判定 --> IMPLEMENT: 运行时失败\n(最多2次)
-        判定 --> FAILED: 超限
-    }
-
-    DONE --> START: 新任务\n（自动重置）
+```
+START ──→ ANALYZE ──→ CONFIRM ──→ DESIGN ──→ IMPLEMENT ──→ VERIFY ──→ JUDGE ──→ DONE
+            │            │          │           │            │           │
+            │   用户确认  │          │           │            │           │
+            │  ┌─── YES ─┤          │           │            │           │
+            │  │          └──→ ABORT │           │            │           │
+            │  │                     │           │            │           │
+            ▼  ▼                     ▼           ▼            ▼           ▼
+         修改需求              QA 审核      QA 审核       QA 审核     六维最终判定
+         (回 ANALYZE)        (打回重做)  (打回重做)   (打回重做)   (打回/通过)
 ```
 
 | 状态 | 推进方式 | 关键检查点 |
 |------|---------|-----------|
 | START | 自动 | 创建接力棒 |
 | ANALYZE | 自动 | 质量审核阻断 |
-| CONFIRM | 等待用户 | 用户确认/修改/取消 |
+| CONFIRM | **等待用户** | 用户确认 / 修改 / 取消 |
 | DESIGN | 自动 | 质量审核阻断 |
 | IMPLEMENT | 自动 | 质量审核阻断 |
 | VERIFY | 自动 | 独立盲审阻断 |
@@ -123,11 +122,59 @@ stateDiagram-v2
 
 ---
 
+## 多 Agent 协作架构
+
+```mermaid
+flowchart TD
+    Controller["🏛️ 总控<br>(状态机 + 调度 + 判定)"]
+    Analyzer["🔍 分析 Agent"]
+    Designer["📐 设计 Agent"]
+    Implementer["🔨 实现 Agent"]
+    Verifier["🧪 验证 Agent"]
+    QA["👁️ Quality Auditor<br>(独立盲审)"]
+
+    Controller --> Analyzer
+    Controller --> Designer
+    Controller --> Implementer
+    Controller --> Verifier
+    Analyzer --> A["📄 _analysis.md"]
+    Designer --> D["📐 _design.md"]
+    Implementer --> I["💾 源码变更"]
+    Verifier --> V["✅ _verification.md"]
+    Verifier -.-> QA
+    A -.-> QA
+    D -.-> QA
+    I -.-> QA
+    QA --> Q["🚦 阻断性评分<br>不通过→返回修复"]
+```
+
+**协作流程**：
+1. 总控读取接力棒确定当前状态
+2. 按状态路由表调度对应的 Agent
+3. Agent 读取前置产物，生成当前阶段产物
+4. Quality Auditor 审核产物，通过后才能进入下一阶段
+5. 总控更新接力棒，自动推进到下一阶段
+
+---
+
+## 适用场景 vs 不适用场景
+
+| ✅ 适用 | ❌ 不适用 |
+|---------|----------|
+| 新项目从需求到上线（推荐） | 简单问答（直接问 AI 即可） |
+| Bug 修复流程化（防止修 A 炸 B） | 单次简单编码任务（改个变量名不需要这么重） |
+| 代码重构（需要架构评估） | 生成报表/看板（用 conspect 去） |
+| 设计评审（让 AI 独立盲审你的设计） | 生成操作手册（用 ManualGen 去） |
+| 中途常被打断的开发任务 | Skill 体检（用 skill-medic 去） |
+| 需要严格质量闸门的项目 | — |
+
+---
+
 ## 产物结构
 
 ```
 {项目路径}/.agent/harness/
-├── _baton.md                     # 接力棒（状态 + 进度 + 任务追踪）
+├── _baton.md                     # 🥎 接力棒（状态 + 进度 + 任务追踪）
 ├── _analysis.md                  # 需求分析报告
 ├── _design.md                    # 技术设计文档
 ├── _implementation.md            # 实现摘要
@@ -137,6 +184,43 @@ stateDiagram-v2
 ├── _quality_audit_implement.md   # 实现质量审核报告
 ├── _quality_audit_verify.md      # 验证质量审核报告
 └── _quality_audit_judge.md       # 最终全局判定报告
+```
+
+**接力棒是核心**：任何时候你发一句"进度"，AI 读接力棒就能告诉你：
+- 当前在哪个阶段
+- 上一个阶段产出了什么
+- 下一步要做什么
+- 有没有打回过、为什么
+
+---
+
+## 项目结构
+
+```
+ReqPlan-v3/
+├── SKILL.md                   # 技能入口（唯一版本声明源）
+├── SKILL-execution.md         # 核心执行指南
+├── README.md                  # 本文件
+├── 6-docs/
+│   └── changelog.md          # 版本变更日志
+├── agents/                    # Agent 定义
+│   ├── analyzer-agent.md
+│   ├── designer-agent.md
+│   ├── implementer-agent.md
+│   ├── verifier-agent.md
+│   └── quality-auditor-agent.md
+├── quality-control/           # 质量体系
+│   └── 00-quality-system.md
+├── protocols/
+│   └── baton-protocol.md     # 接力棒协议
+├── artifacts/
+│   └── template-artifacts.md
+├── SKILL.chunks/              # 分块按需加载
+├── reference/
+│   ├── anti-patterns.md
+│   ├── debug-guide.md
+│   └── faq-deep.md
+└── legacy/                    # 历史归档
 ```
 
 ---
@@ -153,59 +237,13 @@ stateDiagram-v2
 
 ---
 
-## 目录结构
+## 设计理念参考
 
-```
-ReqPlan-v3/
-├── SKILL.md                   # 技能入口（唯一版本声明源）
-├── SKILL-execution.md         # 核心执行指南
-├── README.md                  # 本文件
-├── agents/                    # Agent 定义
-│   ├── analyzer-agent.md     # 分析 Agent
-│   ├── designer-agent.md     # 设计 Agent
-│   ├── implementer-agent.md  # 实现 Agent
-│   ├── verifier-agent.md     # 验证 Agent
-│   └── quality-auditor-agent.md # 质量审核 Agent
-├── quality-control/           # 质量体系
-│   └── 00-quality-system.md  # 质量审核体系定义
-├── protocols/                 # 协议文档
-│   └── baton-protocol.md     # 接力棒协议
-├── artifacts/                 # 产物模板
-│   └── template-artifacts.md # 产物模板集合
-├── SKILL.chunks/              # 分块加载（按需激活）
-├── legacy/                    # 历史归档
-├── reference/                 # 参考文档
-└── 6-docs/                    # 版本变更日志
-    └── changelog.md
-```
-
----
-
-## 设计理念
-
-### Harness Engineering
-
-1. **角色边界** — 每个 Agent 只做一件事，职责单一
-2. **状态机驱动** — 7 阶段自动推进，无需逐一下令
-3. **产物契约** — Agent 间通过文件传递，不靠对话记忆
-4. **护栏规则** — 强制入口清单、首次响应守卫、阻断检查，防止跳步和虚假完成
-
-### 接力棒持久化
-
-1. **跨 Session 续跑** — 任何时候都能继续之前的工作
-2. **状态可视化** — 一目了然当前进度和下一步行动
-3. **问题记录** — 遇到的问题、决策、修复不会丢失
-4. **上下文恢复** — 自动恢复完整运行上下文
-
----
-
-## 参考资料
-
-- [ReqPlan-v3 GitHub](https://github.com/songzhou666/ReqPlan-v3)
 - [Harness Engineering 文章](https://mp.weixin.qq.com/s/AFX_qsyAPBRYyqEV365O9Q)
 - [testerhome Harness 设计](https://testerhome.com/articles/44066)
 
 ---
 
-**作者**: songzhou
-**维护**: 持续更新中 | 当前版本见 [SKILL.md](SKILL.md) 版本信息
+## 许可证
+
+MIT
