@@ -1,5 +1,66 @@
 # ReqPlan 变更日志
 
+## v6.1 (2026-10-16)
+### 产物路径统一版 — 消除 TRAE 与 WorkBuddy 的产物落点差异
+
+**背景**：两个 IDE 打开的工作目录可能不同，按「当前工作目录」推导会导致同一任务的产物落到两处。
+
+**变更**：
+- **定路径规则重写**：明确「工作区根」判定顺序 —— ① 用户明确指定的路径；② 当前工作目录向上回溯至**含 `.trae/` 或 `.workbuddy/` 的最近目录**；③ 回退为当前工作目录
+- **产物落点固定**：所有产物一律写入 `{工作区根}/.agent/harness/`，**不因 IDE 而变**
+- 明确 `{项目路径}` 统一定义为「工作区根」，消除术语歧义
+
+**涉及文件**：
+- SKILL.md：定路径规则、产物路径章节、版本号
+- 1-manifest/skill-manifest.yaml、README.md、artifacts/template-artifacts.md：版本号同步
+- 6-docs/changelog.md：本条记录
+
+---
+
+## v6.0 (2026-10-16)
+### 范式重构版 — 参照 REA skill 工程范式重构信息架构
+
+**背景**：v4.2 曾把 SKILL.md 从 543 行精简到 183 行，但 v4.4→v5.1 期间不断「加功能」（安全示例、FAQ、决策表、超范围引导），主文档膨胀回 531 行，且大量内容属于非操作性说明（FAQ、版本信息、安全说教、威胁条款），与 `SKILL-execution.md`、`SKILL.chunks/` 存在重叠。
+
+**重构（信息架构）**：
+- **SKILL.md 瘦身**：531 行 → 约 205 行，按工作流时间轴重排为「定位与边界 → 激活即执行 → 状态路由 → 产物路径 → 验证链 → 修复回路 → 中断处理 → 触发机制 → 按需读取指引 → 收尾」
+- **新增「按需读取指引」章节**：将「遇到 X 读哪份文件」做成显式路由表，实现渐进式信息披露
+- **新增「收尾」章节**：要求回头核对 ANALYZE 阶段的问题清单（已答/部分答/未答）并明确停止条件
+- **三重守卫合并**：「强制入口清单」「首次响应守卫」「激活即执行」合并为单一「激活即执行」章节，保留全部约束但取消重复陈述
+- **约束陈述化**：移除「违规后果」「判定本 Skill 无效」等威胁式表述，改为陈述句；移除全部 emoji
+- **证据分级**：在验证链中引入 观察 / 推断 / 未知 三级区分，替代部分说教式约束
+
+**内容下沉（新增文件）**：
+- `reference/security-safety.md`：收纳原 SKILL.md 第 3 节安全性与隐私（数据原则、禁止行为、P0/P1 风险表、脱敏指导、使用建议）
+- `reference/faq.md`：收纳原 SKILL.md 主文档 FAQ 6 题
+- `reference/out-of-scope.md`：收纳原 SKILL.md 超范围场景处理引导（3 场景 + 话术）
+
+**修复**：
+- **版本号三处不一致**：SKILL.md v5.1 / skill-manifest.yaml v4.6 / README v3 → 全部统一为 v6.0
+- **版本号第四处遗漏**：`artifacts/template-artifacts.md` 4 处页脚版本号 `4.6` → `6.0`（改造后经独立校验发现）
+- **失效引用**：`SKILL-execution.md` 第 8 章指向 SKILL.md 已被下沉的「超范围场景处理引导」章节 → 改指 `reference/out-of-scope.md`
+- **首行状态报告歧义**：明确「首次激活且同一回复内完成 START→ANALYZE 转换时报 ANALYZE，本轮新建接力棒未转换时报 START」
+- **模式枚举不一致**：`SKILL-execution.md` 的 `NORMAL/FIX` → `NORMAL / DESIGN_FIX / REVIEW_FIX / RETRY_FIX`
+- **六维判定描述不一致**：README 的「架构/代码/运行时/覆盖/安全/文档」→ 与 quality-system 对齐为「需求分析/架构设计/代码实现/测试覆盖/验证报告/流程规范」
+- **emoji 全量规整**：删除装饰性 emoji、状态符号转文字，全 skill emoji 归零（含 Mermaid 图与 ASCII 框图）
+- **README 目录树失真**：移除不存在的 `legacy/` 目录，补全 `1-manifest/`、`6-docs/`、`reference/` 实际内容
+- **任务状态词表两套并存**：`protocols/baton-protocol.md`（完成/进行中/待开始/失败）与 `SKILL.chunks/chunk-02-flows.md`（TODO/WIP/DONE/CANCELLED/BLOCKED）→ 统一为 baton-protocol 的 5 态词表并声明为唯一来源，chunk-02 改为引用
+- **章节编号错乱**：`SKILL-execution.md` 的 4.1 标题写「7 个核心流程」实为 8 行 → 改为 8；两处同名「FAILED 状态恢复流程」→ 区分为「5.8 FAILED 状态恢复（重试超限）」与「7.3 阶段中途失败恢复」；「6.4 重试超限处理」编号错位 → 改为「7.4」
+- **归档链路断裂**：JUDGE→DONE 路径缺长期归档步骤 → 补写 `docs/harness/history.yaml` / `decisions.yaml`，并在 SKILL.md 按需读取指引中挂上 `chunk-04-chain.md`
+- **QA 审核等级缺量化标准**：L1/L2/L3 补充触发条件（含源文件数阈值）与 L2 维度选择规则
+- **子 Agent 降级条件含糊**：补充 3 条客观判定条件，并明确 C/D 级结论与「审核过严」不构成降级理由
+- **`{Skill名称}` 歧义**：明确取目录名的实际拼写（大小写以磁盘为准）
+- **功能选择决策表**：从 SKILL.md 移入 `SKILL-execution.md` 第 4 章与 `chunk-02-flows.md`（原处保留一行指引）
+
+**涉及文件**：
+- SKILL.md：全文重写
+- reference/security-safety.md、reference/faq.md、reference/out-of-scope.md：新增
+- README.md：版本号、目录树、v6.0 说明、核心能力表
+- 1-manifest/skill-manifest.yaml：版本号 4.6 → 6.0、能力声明补充
+- 6-docs/changelog.md：本条记录
+
+---
+
 ## v5.1 (2026-05-28)
 ### TRACE 优化完善版 — 基于 skill-trace-checker 评测驱动的二次优化
 
@@ -592,7 +653,7 @@
 
 **Schema定义**
 - schema-task.md - 任务数据结构
-- schema-state.md - 状态数据结构  
+- schema-state.md - 状态数据结构
 - schema-testcase.md - 测试用例数据结构
 
 **辅助文档**

@@ -136,7 +136,7 @@ Step 3 交付实现层 → 实现/测试/联调完成
 
 ---
 
-## 📋 独立质量审核机制（新增）
+##  独立质量审核机制（新增）
 
 ReqPlan-v3 在 ANALYZE/DESIGN/IMPLEMENT/VERIFY/JUDGE 阶段启用了**独立子Agent盲审**机制。
 

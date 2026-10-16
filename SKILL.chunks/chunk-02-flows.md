@@ -66,12 +66,15 @@ AI收到任务后，首先要判断属于哪个场景，然后按对应流程执
 6. 用户选择新任务 → 启动对应流程的 Step 1，现有计划保留为历史记录
 
 ### 任务状态流转
+
+任务状态以 [protocols/baton-protocol.md](../protocols/baton-protocol.md) 的「任务状态词表」为唯一来源。流转规则：
+
 ```
-⏳ TODO → 🔄 WIP → ✅ DONE
-⏳ TODO → ❌ CANCELLED（用户取消或需求变更为不做了）
-🔄 WIP → ⛔ BLOCKED（遇到依赖阻塞无法继续）
-⛔ BLOCKED → 🔄 WIP（阻塞解除后恢复）
-✅ DONE → 不可逆（如需重做，在下一轮迭代中重新开任务）
+待开始 → 进行中 → 完成
+待开始 → 取消（用户取消或需求变更为不做）
+进行中 → 阻塞（遇到依赖阻塞无法继续）
+阻塞   → 进行中（阻塞解除后恢复）
+完成    → 终态（如需重做，在下一轮迭代中重新开任务）
 ```
 
 ## 流程1：开发（新功能 / 迭代 / 重构）
@@ -96,20 +99,20 @@ AI收到任务后，首先要判断属于哪个场景，然后按对应流程执
 将方案拆解为可执行的任务列表，每项任务标注涉及文件和验证方式。
 **对应状态机阶段**：DESIGN（任务拆解部分）
 **产出**：任务列表写入 `_design.md` 的任务列表章节
-**完成条件**：任务列表初始状态全部为 ⏳ TODO
+**完成条件**：任务列表初始状态全部为 TODO
 **门控**：→ 计划就绪后进入 Step 4
 
 ### Step 4 执行实施
 按计划逐个任务实施，每完成一个更新 `_baton.md` 中的任务追踪状态。
 **对应状态机阶段**：IMPLEMENT
 **状态更新规则**：
-- 开始实施某任务 → ⏳ TODO 改为 🔄 WIP
-- 完成实施 + 验证 → 🔄 WIP 改为 ✅ DONE
-- 遇到阻塞 → 🔄 WIP 改为 ⛔ BLOCKED，记录阻塞原因
-- 用户取消 → ⏳ TODO 改为 ❌ CANCELLED
+- 开始实施某任务 → TODO 改为 WIP
+- 完成实施 + 验证 → WIP 改为 DONE
+- 遇到阻塞 → WIP 改为 BLOCKED，记录阻塞原因
+- 用户取消 → TODO 改为 CANCELLED
 - 进度行自动更新：{doneCount}/{totalCount} ({progressPercent}%)
 **产出**：`.agent/harness/_implementation.md`
-**完成条件**：所有任务均为 ✅ DONE 或 ❌ CANCELLED
+**完成条件**：所有任务均为 DONE 或 CANCELLED
 **门控**：→ 计划任务全部完成后进入 Step 5
 
 ### Step 5 分层验证
@@ -232,14 +235,14 @@ Layer 1 静态检查 → Layer 2 单元测试 → Layer 3 构建集成 → Layer
 
 ## 流程4：自绑定审查（审查 / 修复 Skill 自身）
 
-> **🪞 自绑定**：本流程专用于审查、检查、分析或修复 reqplan-v3 Skill 自身。
+> ** 自绑定**：本流程专用于审查、检查、分析或修复 reqplan-v3 Skill 自身。
 > 它使用与流程1相同的 7 阶段状态机，只是各阶段的产出物从"项目代码"变为"Skill 文件本身"。
 
 对应 SKILL.md 7 阶段主流程（**无跳过**，完整7阶段）。任何以"元任务"为由跳过状态机的行为均违反自绑定条款。
 
 ### Step 1 分析Skill结构（ANALYZE）
-**对应状态机阶段**：ANALYZE  
-**产出**：`.agent/harness/_analysis.md`  
+**对应状态机阶段**：ANALYZE
+**产出**：`.agent/harness/_analysis.md`
 **分析维度**：
 1. 文件结构完整性（所有引用文件是否存在）
 2. 流程闭环性（START→...→DONE 是否完整）
@@ -251,15 +254,15 @@ Layer 1 静态检查 → Layer 2 单元测试 → Layer 3 构建集成 → Layer
 **门控**：→ 分析完成进入 CONFIRM
 
 ### Step 2 用户确认（CONFIRM）
-**对应状态机阶段**：CONFIRM  
-**产出**：无  
+**对应状态机阶段**：CONFIRM
+**产出**：无
 **完成条件**：用户确认或提出修改意见
-- ✅ 确认 → 进入 DESIGN
-- ✏️ 修改 → 记录修改内容，返回 ANALYZE
+- 确认 → 进入 DESIGN
+- 修改 → 记录修改内容，返回 ANALYZE
 
 ### Step 3 设计修复方案（DESIGN）
-**对应状态机阶段**：DESIGN  
-**产出**：`.agent/harness/_design.md`  
+**对应状态机阶段**：DESIGN
+**产出**：`.agent/harness/_design.md`
 **设计内容**：
 1. 针对发现的问题设计修复方案
 2. 列出涉及的文件和修改内容
@@ -268,15 +271,15 @@ Layer 1 静态检查 → Layer 2 单元测试 → Layer 3 构建集成 → Layer
 **门控**：→ 设计完成进入 IMPLEMENT
 
 ### Step 4 实施修复（IMPLEMENT）
-**对应状态机阶段**：IMPLEMENT  
-**产出**：`.agent/harness/_implementation.md`  
+**对应状态机阶段**：IMPLEMENT
+**产出**：`.agent/harness/_implementation.md`
 **执行方式**：按设计任务列表逐一实施，写入文件
 **完成条件**：所有修复任务已完成
 **门控**：→ 实施完成进入 VERIFY
 
 ### Step 5 验证修复（VERIFY）
-**对应状态机阶段**：VERIFY  
-**产出**：`.agent/harness/_verification.md`  
+**对应状态机阶段**：VERIFY
+**产出**：`.agent/harness/_verification.md`
 **验证内容**：
 1. 文件校验：列出所有修改的文件并确认写入成功
 2. 一致性检查：版本号、交叉引用、标题、目录结构
@@ -285,11 +288,11 @@ Layer 1 静态检查 → Layer 2 单元测试 → Layer 3 构建集成 → Layer
 **门控**：→ 验证通过进入 JUDGE
 
 ### Step 6 全局判定（JUDGE）
-**对应状态机阶段**：JUDGE → DONE  
+**对应状态机阶段**：JUDGE → DONE
 **判定标准**：
-- ✅ PASS：全部修复通过，文件一致
-- 🔧 缺陷等级为 P0/P1 → 返回 DESIGN 修复
-- ❌ FAILED：严重问题无法修复 → 输出终止报告
-**产出**：`.agent/harness/_verification.md` + `.agent/harness/_quality_audit_judge.md`  
+- PASS：全部修复通过，文件一致
+- 缺陷等级为 P0/P1 → 返回 DESIGN 修复
+- FAILED：严重问题无法修复 → 输出终止报告
+**产出**：`.agent/harness/_verification.md` + `.agent/harness/_quality_audit_judge.md`
 **完成条件**：判定结果确定，接力棒更新
 **门控**：→ 流程结束

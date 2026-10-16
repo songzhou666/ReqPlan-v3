@@ -4,10 +4,10 @@
 skill:
   id: "ReqPlan-v3"
   name: "ReqPlan-v3 软件开发引导专家"
-  version: "4.6"
+  version: "6.1"
   author: "songzhou"
   created_at: "2026-05-15"
-  updated_at: "2026-05-24"
+  updated_at: "2026-10-16"
 
   # Skill分类与标签
   category: "development"
@@ -32,6 +32,8 @@ skill:
     - "Bug排查与修复流程"
     - "代码审查与架构分析"
     - "独立质量审核与盲审评分"
+    - "按需读取 references（渐进式信息披露）"
+    - "安全与隐私风险处置（P0/P1 分级）"
 
   # 适配场景
   scenarios:

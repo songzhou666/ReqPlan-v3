@@ -22,7 +22,7 @@
 
 ### 跳过执行方式
 1. 创建阶段产物（内容标注"该阶段已跳过，原因：[跳过条件]"）
-2. 更新接力棒，标记该阶段为 ✅ 跳过
+2. 更新接力棒，标记该阶段为 跳过
 3. 直接进入下一阶段
 
 ### 跳过限制
@@ -81,7 +81,7 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
 ┌─────────────────────────────────────────┐
 │ Step 1: 读取接力棒                       │ ← 强制
 │  - 确认当前状态                           │
-│  - 确认当前模式（NORMAL/FIX）              │
+│  - 确认当前模式                           │
 └─────────────────────────────────────────┘
                    ↓
 ┌─────────────────────────────────────────┐
@@ -134,9 +134,11 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
 
 ---
 
+**模式取值**：`NORMAL`（正常执行）/ `DESIGN_FIX`（设计修复）/ `REVIEW_FIX`（代码规范修复）/ `RETRY_FIX`（测试失败重试）。定义见 SKILL.md「修复回路」。
+
 ## 四、核心流程与场景映射
 
-### 4.1 7 个核心流程
+### 4.1 8 个核心流程
 
 | # | 流程 | 适用场景 | 执行路径 | 特殊说明 |
 |:-:|------|----------|----------|----------|
@@ -147,7 +149,7 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
 | 5 | 测试优化流程 | 测试策略、用例设计、覆盖提升 | 完整7阶段 | IMPLEMENT 只写测试代码 |
 | 6 | 文档完善流程 | 技术文档、API 文档补充 | 跳过 DESIGN | IMPLEMENT 编写文档 |
 | 7 | 架构重构流程 | 架构优化、技术债务清理 | 完整7阶段 | DESIGN 重点输出重构计划 |
-| 8 | **🪞 自绑定审查流程** | **审查/修复 Skill 自身** | **完整7阶段** | **不允许跳过，详见 chunk-02-flows 流程4** |
+| 8 | **自绑定审查流程** | **审查/修复 Skill 自身** | **完整7阶段** | **不允许跳过，详见 chunk-02-flows 流程4** |
 
 ### 4.2 8 流程 ↔ 3 场景映射
 
@@ -162,7 +164,7 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
 | 测试优化流程 | 开发/分析场景 | chunk-02-flows.md → 流程1+流程2 |
 | 文档完善流程 | 开发场景 | chunk-02-flows.md → 流程1（开发），输出阶段参考 |
 | 架构重构流程 | 修复场景 | chunk-02-flows.md → 流程3（修复） |
-| 🪞 自绑定审查流程 | 元任务场景 | [SKILL.chunks/chunk-02-flows.md](SKILL.chunks/chunk-02-flows.md) → **流程4（自绑定审查）** |
+|  自绑定审查流程 | 元任务场景 | [SKILL.chunks/chunk-02-flows.md](SKILL.chunks/chunk-02-flows.md) → **流程4（自绑定审查）** |
 
 **使用方式**：确定当前属于哪个流程后，查阅对应 chunk 场景的分步引导获取更细化的执行指引。
 
@@ -210,7 +212,7 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
 6. [ ] 更新接力棒
    - 状态: START → ANALYZE
    - 记录: 用户需求摘要
-   - 标记: START ✅
+   - 标记: START
 
 7. [ ] 第一行输出："当前状态：ANALYZE，下一步：生成需求分析报告"
 
@@ -271,7 +273,7 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
 
 6. [ ] 更新接力棒
    read {项目路径}/.agent/harness/_baton.md
-   - 状态: ANALYZE ✅ → CONFIRM
+   - 状态: ANALYZE → CONFIRM
    - 下一步: CONFIRM
    - quality_audit_analysis 行: 将"状态"列改为"已通过"（或"已打回"），"报告文件"列填入 _quality_audit_analysis.md
    write {项目路径}/.agent/harness/_baton.md
@@ -285,7 +287,7 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
 
 **入口**：ANALYZE 完成
 
-**⚠️ 关键**：这是唯一的用户交互节点！**必须等待用户明确响应，不能自动继续！**
+**注意：关键**：这是唯一的用户交互节点！**必须等待用户明确响应，不能自动继续！**
 
 **前置检查（阻断条件）**：
 ```markdown
@@ -303,74 +305,70 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
    命令：read {项目路径}/.agent/harness/_analysis.md
 
 2. [ ] 展示摘要（必须包含以下内容）
-   
+
    ---
-   
-   ## 📋 需求分析摘要
-   
+
+   ##  需求分析摘要
+
    > 请花 1 分钟确认需求理解是否正确。
-   
+
    ### 核心功能
-   
-   | # | 功能点 | 优先级 | 说明 |
-   |---|--------|--------|------|
-   | 1 | {功能1} | P0 | {说明} |
-   | 2 | {功能2} | P1 | {说明} |
-   | 3 | {功能3} | P2 | {说明} |
-   
+
+   | # | 功能点 | 优先级 | 说明 | |---|--------|--------|------| | 1 | {功能1} | P0 | {说明} | | 2 | {功能2} | P1 | {说明} | | 3 | {功能3} | P2 | {说明} |
+
    ### 技术栈
-   
+
    - 后端：{技术栈}
    - 前端：{技术栈}
    - 数据库：{数据库}
    - 其他：{其他依赖}
-   
+
    ### 涉及文件
-   
+
    - `{文件1}`
    - `{文件2}`
    - `{文件3}`
-   
+
    ### 关键约束
-   
+
    - {约束1}
    - {约束2}
-   
+
    ---
-   
-   ### ⚠️ 请确认
-   
+
+   ### 注意：请确认
+
    **需求理解是否正确？**
-   
-   - ✅ **确认（继续设计）**：开始设计技术方案
-   - ✏️  **修改需求**：描述需要修改的内容，我会重新分析
-   - ❌  **取消**：终止 ReqPlan 流程
-   
+
+   - **确认（继续设计）**：开始设计技术方案
+   - **修改需求**：描述需要修改的内容，我会重新分析
+   - **取消**：终止 ReqPlan 流程
+
    ---
-   
-   ### 📋 质量审核结果
-   
+
+   ###  质量审核结果
+
    > 分析阶段已通过独立质量审核，详见 `_quality_audit_analysis.md`。如有需要可查看审核报告了解分析质量评分。
-   
+
    ---
-   
+
    *确认后，我将进入设计阶段，制定详细的技术方案。*
 
 3. [ ] 强制等待用户响应
-   ⚠️ 阻断规则：在没有收到用户明确回复前，禁止执行任何其他操作
-   ⚠️ 禁止行为：不要自动进入下一阶段，不要假设用户同意
+   注意：阻断规则：在没有收到用户明确回复前，禁止执行任何其他操作
+   注意：禁止行为：不要自动进入下一阶段，不要假设用户同意
 
 4. [ ] 检查点验证（阻断点）
    - [ ] 用户明确回复"确认"/"同意"/"继续"/"是的"
    - [ ] 或用户回复包含肯定意味的表达
-   
+
    **如果用户选择"修改" → 记录修改内容到接力棒 → 返回 ANALYZE**
    （返回 ANALYZE 后，AI 自动重新分析、更新鉴定棒，完成后再次进入 CONFIRM 等待用户确认）
    **如果用户选择"取消" → 状态设为 ABORT → 输出终止报告（见附录：终止报告模板）→ 流程结束**
    **如果用户未明确确认 → 阻断 → 重复步骤 2-3（再次展示摘要并等待）**
 
 5. [ ] 检查点验证 — 校验阶段转换合法性
-   - [ ] 用户已确认（CONFIRM ✅）
+   - [ ] 用户已确认（CONFIRM ）
    - [ ] _analysis.md 存在且完整
    - [ ] _quality_audit_analysis.md 存在（质量审核已通过）
    【确认满足 CONFIRM→DESIGN 条件】
@@ -378,7 +376,7 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
 
 6. [ ] 更新接力棒
    命令：read {项目路径}/.agent/harness/_baton.md
-   修改：状态 CONFIRM ✅ → DESIGN
+   修改：状态 CONFIRM → DESIGN
    命令：write {项目路径}/.agent/harness/_baton.md
 
 7. [ ] 进入 DESIGN 阶段
@@ -393,7 +391,7 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
 **前置检查（阻断条件）**：
 ```markdown
 - [ ] 接力棒状态为 DESIGN
-- [ ] 用户已确认（CONFIRM ✅）
+- [ ] 用户已确认（CONFIRM ）
 - [ ] _analysis.md 存在且完整
 - [ ] _quality_audit_analysis.md 存在（质量审核已通过）
 
@@ -444,7 +442,7 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
 
 7. [ ] 更新接力棒
    read {项目路径}/.agent/harness/_baton.md
-   - 状态: DESIGN ✅ → IMPLEMENT
+   - 状态: DESIGN → IMPLEMENT
    - 模式: 重置为 NORMAL（即使此前为 DESIGN_FIX，修复后已恢复常规流程）
    - 下一步: IMPLEMENT
    - quality_audit_design 行: 将"状态"列改为"已通过"（或"已打回"），"报告文件"列填入 _quality_audit_design.md
@@ -513,7 +511,7 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
    **未通过 → 输出错误："代码必须保存到文件后才能进入验证" → 必须修复**
 
 7. [ ] 更新接力棒
-   - 状态: IMPLEMENT ✅ → VERIFY
+   - 状态: IMPLEMENT → VERIFY
    - 下一步: VERIFY
 
 8. [ ] 进入 VERIFY 阶段
@@ -584,7 +582,7 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
 
 7. [ ] 更新接力棒
    read {项目路径}/.agent/harness/_baton.md
-   - 状态: VERIFY ✅ → JUDGE
+   - 状态: VERIFY → JUDGE
    - 下一步: JUDGE
    - quality_audit_verify 行: 将"状态"列改为"已通过"（或"已打回"），"报告文件"列填入 _quality_audit_verify.md
    write {项目路径}/.agent/harness/_baton.md
@@ -639,20 +637,23 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
    - [ ] A/B/C级 → 继续下一步判定
 
    第二步：按 VERIFY 结果路由
-   如果 PASS ✅:
+   如果 PASS :
      - [ ] A级/B级 → 直接 DONE
      - [ ] C级 → 记录改进项到接力棒，DONE
-     - [ ] 更新接力棒: 状态 JUDGE ✅ → DONE
+     - [ ] 更新接力棒: 状态 JUDGE → DONE
+     - [ ] 写入长期归档（跨任务持久化，格式见 SKILL.chunks/chunk-04-chain.md）:
+       - 追加任务摘要到 {项目路径}/docs/harness/history.yaml
+       - 追加关键决策到 {项目路径}/docs/harness/decisions.yaml
      - read {项目路径}/.agent/harness/_baton.md
      - quality_audit_judge 行: 将"状态"列改为"已通过"，"分数"列填入{分数}
      - write {项目路径}/.agent/harness/_baton.md
      - [ ] 输出完成报告（包含最终等级和评分）
      - [ ] 提供后续选项：
        ```
-       ### 🔄 后续操作
-       
+       ### 后续操作
+
        流程已完成。请选择：
-       - ✅ **结束**：流程结束，所有产物保留在 .agent/harness/
+       - **结束**：流程结束，所有产物保留在 .agent/harness/
        - 🆕 **启动新任务**：自动重置接力棒为 START，开始新的任务流程
          （执行方式：read _baton.md → 重置状态为 START，模式为 NORMAL，
           重试计数归零，质量审核追踪全部重置，阶段完成情况全部取消勾选
@@ -660,30 +661,30 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
        ```
      - [ ] 流程结束
 
-   如果 ARCHITECTURE_VIOLATION 🔧:
+   如果 ARCHITECTURE_VIOLATION :
      - [ ] 检查 design_fix_retry < 2
      【确认满足 JUDGE→DESIGN 条件】
-     - [ ] 更新接力棒: 状态 JUDGE ➡ DESIGN(修复模式), 模式 DESIGN_FIX, design_fix_retry += 1
+     - [ ] 更新接力棒: 状态 JUDGE → DESIGN(修复模式), 模式 DESIGN_FIX, design_fix_retry += 1
      - [ ] 进入 DESIGN 阶段（修复模式）
      - [ ] 如果 design_fix_retry >= 2 → 状态 FAILED → 流程结束
 
-   如果 REVIEW_VIOLATION 🔧:
+   如果 REVIEW_VIOLATION :
      【确认满足 JUDGE→IMPLEMENT 条件】
-     - [ ] 更新接力棒: 状态 JUDGE ➡ IMPLEMENT(修复模式), 模式 REVIEW_FIX
+     - [ ] 更新接力棒: 状态 JUDGE → IMPLEMENT(修复模式), 模式 REVIEW_FIX
      - [ ] 进入 IMPLEMENT 阶段（修复模式）
 
-   如果 RUNTIME_FAILURE 🔄:
+   如果 RUNTIME_FAILURE :
      - [ ] 检查 retry < 2
      【确认满足 JUDGE→IMPLEMENT 条件】
-     - [ ] 更新接力棒: 状态 JUDGE ➡ IMPLEMENT(重试模式), 模式 RETRY_FIX, retry += 1
+     - [ ] 更新接力棒: 状态 JUDGE → IMPLEMENT(重试模式), 模式 RETRY_FIX, retry += 1
      - [ ] 进入 IMPLEMENT 阶段（重试模式）
      - [ ] 如果 retry >= 2 → 状态 FAILED → 流程结束
 
-   如果 ENVIRONMENT ⚠️:
+   如果 ENVIRONMENT 注意:
      - [ ] 更新接力棒: 记录环境问题
      - [ ] 输出环境问题的通知和建议
      - [ ] 等待用户处理环境后手动继续
-   
+
    **ENVIRONMENT 恢复路径**：
    - 用户解决环境问题后，手动更新接力棒状态为 ENVIRONMENT（保持当前阶段）
    - AI 读取到 ENVIRONMENT 状态后：恢复执行被中断的质量审核或阻断检查
@@ -692,7 +693,7 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
 
 ---
 
-### FAILED 状态恢复流程
+### 5.8 FAILED 状态恢复（重试超限）
 
 当接力棒状态变为 FAILED 时（重试超过上限），AI 应按以下流程处理：
 
@@ -710,10 +711,10 @@ Quality Auditor 子Agent 是在指定阶段内调用的审核子Agent，它不�
    - 剩余产物：{已完成的产物清单}
 
 3. [ ] 提供恢复选项
-   - 🔄 **从指定阶段重跑**：用户修复根本原因后，手动修改接力棒状态为指定阶段（如 DESIGN），
+   - **从指定阶段重跑**：用户修复根本原因后，手动修改接力棒状态为指定阶段（如 DESIGN），
      设置模式为 NORMAL，重置重试计数为 0，重新进入流程
-   - ❌ **终止流程（ABORT）**：输出终止报告，流程结束
-   - ⚠️ **报告环境问题**：如果失败原因为环境问题，等待用户处理环境后继续
+   - **终止流程（ABORT）**：输出终止报告，流程结束
+   - 注意：**报告环境问题**：如果失败原因为环境问题，等待用户处理环境后继续
 
 4. [ ] 记录恢复决定到接力棒
 ```
@@ -804,7 +805,7 @@ AI 根据用户选择执行对应操作。恢复后需清除相关重试计数�
 - 不能跨阶段跳跃（如从 VERIFY 直接跳到 JUDGE）
 - 跳过阶段对应的前置产物必须已存在
 
-### FAILED 状态恢复流程
+### 7.3 阶段中途失败恢复
 
 如果某个阶段在执行中途失败（如文件写入失败、Task 调用失败），按以下步骤恢复：
 
@@ -816,7 +817,7 @@ AI 根据用户选择执行对应操作。恢复后需清除相关重试计数�
 5. [ ] 如果失败重复发生，考虑进入人工介入流程
 ```
 
-### 6.4 重试超限处理
+### 7.4 重试超限处理
 
 当 JUDGE 阶段的修复循环达到重试上限时：
 
@@ -832,7 +833,7 @@ AI 根据用户选择执行对应操作。恢复后需清除相关重试计数�
 ## 八、超范围场景处理引导
 
 > 当用户需求超出 ReqPlan-v3 能力范围时，AI 应遵循以下引导规范。
-> 补充引导参考：参考 [SKILL.md](../SKILL.md) 核心机制中的"超范围场景处理引导"章节。
+> 补充引导参考：[reference/out-of-scope.md](../reference/out-of-scope.md)（超范围场景处理引导）。
 
 ### 8.1 用户要求执行不支持的编程语言
 
@@ -894,7 +895,7 @@ AI 根据用户选择执行对应操作。恢复后需清除相关重试计数�
 ### A.1 DONE 报告（流程成功完成）
 
 ```markdown
-# ✅ ReqPlan 流程完成报告
+# ReqPlan 流程完成报告
 
 ## 项目信息
 - 项目路径: {项目路径}
@@ -904,13 +905,13 @@ AI 根据用户选择执行对应操作。恢复后需清除相关重试计数�
 
 | # | 阶段 | 状态 | 产物 | 说明 |
 |---|------|------|------|------|
-| 1 | START | ✅ | _baton.md | 启动 |
-| 2 | ANALYZE | ✅ | _analysis.md / _quality_audit_analysis.md | 分析通过 |
-| 3 | CONFIRM | ✅ | - | 用户确认 |
-| 4 | DESIGN | ✅ | _design.md / _quality_audit_design.md | 设计通过 |
-| 5 | IMPLEMENT | ✅ | _implementation.md / _quality_audit_implement.md | 实现完成 |
-| 6 | VERIFY | ✅ | _verification.md / _quality_audit_verify.md | 验证通过 |
-| 7 | JUDGE | ✅ | _quality_audit_judge.md | 全局判定通过 |
+| 1 | START | 是 | _baton.md | 启动 |
+| 2 | ANALYZE | 是 | _analysis.md / _quality_audit_analysis.md | 分析通过 |
+| 3 | CONFIRM | 是 | - | 用户确认 |
+| 4 | DESIGN | 是 | _design.md / _quality_audit_design.md | 设计通过 |
+| 5 | IMPLEMENT | 是 | _implementation.md / _quality_audit_implement.md | 实现完成 |
+| 6 | VERIFY | 是 | _verification.md / _quality_audit_verify.md | 验证通过 |
+| 7 | JUDGE | 是 | _quality_audit_judge.md | 全局判定通过 |
 
 ## 最终产物
 - 全部产物位于 `{项目路径}/.agent/harness/`
@@ -925,7 +926,7 @@ AI 根据用户选择执行对应操作。恢复后需清除相关重试计数�
 ### A.2 ABORT 报告（用户取消）
 
 ```markdown
-# ⏹️ ReqPlan 流程已终止
+# ⏹ ReqPlan 流程已终止
 
 ## 项目信息
 - 项目路径: {项目路径}
@@ -937,8 +938,8 @@ AI 根据用户选择执行对应操作。恢复后需清除相关重试计数�
 
 | # | 阶段 | 状态 | 产物 |
 |---|------|------|------|
-| 1 | START | ✅ | _baton.md |
-| 2 | ANALYZE | ✅ | _analysis.md |
+| 1 | START | 是 | _baton.md |
+| 2 | ANALYZE | 是 | _analysis.md |
 | ... | ... | ... | ... |
 
 ## 说明
@@ -949,7 +950,7 @@ AI 根据用户选择执行对应操作。恢复后需清除相关重试计数�
 ### A.3 FAILED 报告（流程执行失败）
 
 ```markdown
-# ❌ ReqPlan 流程执行失败
+# ReqPlan 流程执行失败
 
 ## 项目信息
 - 项目路径: {项目路径}
@@ -966,7 +967,7 @@ AI 根据用户选择执行对应操作。恢复后需清除相关重试计数�
 
 | # | 阶段 | 状态 | 产物 |
 |---|------|------|------|
-| 1 | START | ✅ | _baton.md |
+| 1 | START | 是 | _baton.md |
 | ... | ... | ... | ... |
 
 ## 恢复建议
